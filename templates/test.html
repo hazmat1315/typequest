@@ -1,0 +1,57 @@
+{# Typing test screen (Mockup 3). Owner: Lucas. L1-L9
+   The passage and URLs are handed to typing.js through data- attributes. #}
+{% extends "base.html" %}
+{% block title %}Typing test{% endblock %}
+
+{% block content %}
+<div id="typing-test"
+     data-text="{{ passage.text }}"
+     data-level="{{ passage.level }}"
+     data-seconds="{{ test_seconds }}"
+     data-passage-url="{{ url_for('new_passage', level='LEVEL') }}"
+     data-result-url="{{ url_for('save_result') }}">
+
+  <div class="test-header">
+    <div class="levels" role="group" aria-label="Difficulty">
+      <span class="levels-label">Difficulty:</span>
+      {% for level in levels %}
+      <button type="button" class="button level{% if level == passage.level %} selected{% endif %}"
+              data-level="{{ level }}" aria-pressed="{{ 'true' if level == passage.level else 'false' }}">
+        {{ level|capitalize }}
+      </button>
+      {% endfor %}
+    </div>
+
+    <div class="stats compact">
+      <div class="stat">
+        <span class="stat-label">Time left</span>
+        <span class="stat-value" id="time-left">1:00</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">WPM</span>
+        <span class="stat-value" id="live-wpm">-</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Accuracy</span>
+        <span class="stat-value" id="live-accuracy">-</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="passage" id="passage" aria-label="Passage to type"></div>
+
+  <label for="typing-input" class="visually-hidden">Type the passage here</label>
+  <input id="typing-input" class="typing-input" placeholder="Start typing here. The timer starts on your first key."
+         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
+
+  <p id="status" class="hint" role="status" aria-live="polite">
+    Green letters are right. Red underlined letters are mistakes. Keep going, you can't go back!
+  </p>
+
+  <button type="button" id="restart" class="button">Restart</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/typing.js') }}"></script>
+{% endblock %}

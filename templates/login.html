@@ -1,0 +1,24 @@
+{# Login screen (Mockup 1). Owner: Henry. H4, H5 #}
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block main_class %}page centred{% endblock %}
+
+{% block content %}
+<section class="card auth">
+  <div class="logo big">TypeQuest</div>
+  <h1>Welcome to TypeQuest!</h1>
+
+  <form method="post" action="{{ url_for('login') }}">
+    <label for="username">Username</label>
+    <input id="username" name="username" value="{{ username }}" autocomplete="username"
+           placeholder="speedyfingers12" required autofocus>
+
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+    <button type="submit" class="button go">Log in</button>
+  </form>
+
+  <p><a href="{{ url_for('register') }}">New here? Create an account</a></p>
+</section>
+{% endblock %}

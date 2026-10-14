@@ -1,0 +1,377 @@
+/* TypeQuest styles.  Owner: Lucas (UI).
+   Iteration 1 is deliberately plain. Rules from the spec:
+   text at least 16px, big clearly labelled buttons, mistakes underlined as well as red. */
+
+:root {
+  --ink: #1f2933;
+  --muted: #52606d;
+  --line: #9aa5b1;
+  --paper: #ffffff;
+  --background: #f3f6f9;
+  --logo: #97d5e0;
+  --go: #b5e61d;
+  --go-hover: #a3d20f;
+  --highlight: #ffe94d;
+  --right: #1a7f37;
+  --wrong: #c62828;
+  --wrong-background: #fde2e2;
+  --link: #2850a8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--background);
+}
+
+a {
+  color: var(--link);
+}
+
+h1 {
+  font-size: 1.6rem;
+  margin: 0 0 1rem;
+}
+
+h2 {
+  font-size: 1.3rem;
+  margin: 0 0 0.75rem;
+}
+
+/* ---------- Layout ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+}
+
+.topbar nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.page.centred {
+  max-width: 480px;
+  padding-top: 3rem;
+}
+
+.card {
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  padding: 1.5rem;
+}
+
+.logo {
+  display: inline-block;
+  padding: 0.25rem 0.9rem;
+  font-weight: bold;
+  font-size: 1.3rem;
+  color: var(--ink);
+  text-decoration: none;
+  background: var(--logo);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+}
+
+.logo.big {
+  display: block;
+  text-align: center;
+  font-size: 2rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* ---------- Forms and buttons ---------- */
+
+.auth h1 {
+  text-align: center;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-top: 1rem;
+}
+
+input {
+  width: 100%;
+  font: inherit;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid var(--line);
+  border-radius: 4px;
+}
+
+input:focus {
+  outline: 3px solid var(--link);
+  outline-offset: 1px;
+  border-color: var(--link);
+}
+
+.help {
+  margin: 0.25rem 0 0;
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.button {
+  display: inline-block;
+  min-height: 48px;
+  padding: 0.6rem 1.5rem;
+  font: inherit;
+  font-weight: bold;
+  color: var(--ink);
+  text-align: center;
+  text-decoration: none;
+  background: #e4e7eb;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: #cbd2d9;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button.go {
+  background: var(--go);
+}
+
+.button.go:hover {
+  background: var(--go-hover);
+}
+
+.auth .button {
+  width: 100%;
+  margin-top: 1.5rem;
+  text-transform: uppercase;
+}
+
+.auth p {
+  text-align: center;
+}
+
+/* ---------- Messages ---------- */
+
+.message {
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  border: 2px solid var(--right);
+  background: #e3f6e8;
+}
+
+.message.error {
+  border-color: var(--wrong);
+  background: var(--wrong-background);
+  color: #8e1c1c;
+}
+
+.hint {
+  color: var(--muted);
+}
+
+.hint.error,
+#status.error {
+  color: var(--wrong);
+  font-weight: bold;
+}
+
+/* ---------- Stat boxes (home, test and results) ---------- */
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 140px;
+  padding: 0.75rem 1.25rem;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+}
+
+.stat-label {
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.stats.compact {
+  margin: 0;
+}
+
+.stats.compact .stat {
+  min-width: 110px;
+  padding: 0.4rem 1rem;
+}
+
+/* ---------- Home ---------- */
+
+.activities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.activity {
+  text-align: center;
+  min-width: 260px;
+}
+
+.activity p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.test-button {
+  background: var(--highlight);
+  font-size: 1.2rem;
+  text-transform: uppercase;
+}
+
+.test-button:hover {
+  background: #f5d800;
+}
+
+/* ---------- Typing test ---------- */
+
+.test-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.levels {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.levels-label {
+  font-weight: bold;
+}
+
+.button.level.selected {
+  background: var(--highlight);
+}
+
+.passage {
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.4rem;
+  line-height: 1.8;
+  white-space: pre-wrap;   /* keep every space so each one can be coloured */
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  cursor: text;
+}
+
+/* L3: green = right, red + underline = wrong (underline is for colour-blind students) */
+.passage .correct {
+  color: var(--right);
+}
+
+.passage .incorrect {
+  color: var(--wrong);
+  background: var(--wrong-background);
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+}
+
+/* The cursor: the next letter to type */
+.passage .current {
+  background: var(--highlight);
+  box-shadow: inset 0 -3px 0 var(--ink);
+}
+
+.typing-input {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.typing-input:disabled {
+  background: #e4e7eb;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Results ---------- */
+
+.results-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.tips {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tip {
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-left: 8px solid var(--wrong);
+  border-radius: 4px;
+}
+
+.tip.great {
+  border-left-color: var(--right);
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}

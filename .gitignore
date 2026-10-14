@@ -1,0 +1,13 @@
+# Database and secret key are made when the app runs; never commit them.
+typequest.db
+.secret_key
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Mac
+.DS_Store

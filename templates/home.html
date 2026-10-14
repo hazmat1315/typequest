@@ -1,0 +1,31 @@
+{# Home dashboard (Mockup 2). Owner: Henry. H8
+   Iteration 1 shows Best WPM, Tests done and the Typing Test button only.
+   Avg accuracy, Streak, Game and Practice are added in Iteration 2. #}
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<h1>Hi {{ username }}! Ready to practise?</h1>
+
+<div class="stats">
+  <div class="stat">
+    <span class="stat-label">Best WPM</span>
+    <span class="stat-value">{{ stats.best_wpm if stats.best_wpm is not none else "-" }}</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Tests done</span>
+    <span class="stat-value">{{ stats.tests_done }}</span>
+  </div>
+</div>
+
+<div class="activities">
+  <div class="card activity">
+    <a class="button test-button" href="{{ url_for('typing_test') }}">Typing test</a>
+    <p>Check your speed and get tips for your tricky keys.</p>
+  </div>
+</div>
+
+{% if stats.tests_done == 0 %}
+<p class="hint">You haven't done a test yet. Press <strong>Typing test</strong> to get your first score!</p>
+{% endif %}
+{% endblock %}

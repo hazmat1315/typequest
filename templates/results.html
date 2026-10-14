@@ -1,0 +1,53 @@
+{# Results and tips screen (Mockup 4).
+   Owners: Lucas (results section) and George (tips section).
+   The heatmap, personal best badge and Practise button are added in Iteration 2. #}
+{% extends "base.html" %}
+{% block title %}Your results{% endblock %}
+
+{% block content %}
+{% if result is none %}
+  <h1>No results yet</h1>
+  <p>You haven't finished a typing test yet.</p>
+  <a class="button go" href="{{ url_for('typing_test') }}">Start a typing test</a>
+{% else %}
+<div class="results-layout">
+
+  {# ---------- Results section (Lucas) - L5 ---------- #}
+  <section>
+    <h1>Your results</h1>
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-label">WPM</span>
+        <span class="stat-value" id="result-wpm">{{ result.wpm }}</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Accuracy</span>
+        <span class="stat-value" id="result-accuracy">{{ result.accuracy }}%</span>
+      </div>
+    </div>
+    <p class="hint">Level: {{ result.level|capitalize }}. Saved to your account.</p>
+  </section>
+
+  {# ---------- Tips section (George) - G6, G7 ---------- #}
+  <section>
+    <h2>Your tips</h2>
+    <ul class="tips">
+      {% for tip in tips %}
+      <li class="tip{% if tip.key is none %} great{% endif %}">
+        {% if tip.key is not none %}
+          <strong>{{ tip.key }} ({{ tip.percent }}% wrong):</strong>
+        {% endif %}
+        {{ tip.text }}
+      </li>
+      {% endfor %}
+    </ul>
+    <p class="help">Tips are based on every test you have done, so they get more accurate the more you practise.</p>
+  </section>
+</div>
+
+<div class="actions">
+  <a class="button go" href="{{ url_for('typing_test', level=result.level) }}">Try again</a>
+  <a class="button" href="{{ url_for('home') }}">Home</a>
+</div>
+{% endif %}
+{% endblock %}
