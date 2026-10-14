@@ -1,4 +1,4 @@
-"""One finished typing test.  Owner: Lucas (L5, L7).
+"""One finished typing test.  Owner: Lucas (L5, L7, L16).
 
 The browser (typing.js) counts key presses while the student types, then sends
 the totals to POST /result. The server rebuilds the test as a TypingSession and
@@ -39,11 +39,12 @@ class TypingSession:
         return {"wpm": self.wpm(), "accuracy": self.accuracy(), "level": self.passage.level}
 
     @classmethod
-    def from_json(cls, data, passage):
+    def from_json(cls, data, passage, max_seconds=TEST_SECONDS):
         """Build a session from the JSON sent by typing.js, checking every value.
 
         Raises ValueError with a short reason if anything is missing or impossible,
-        e.g. more correct letters than the passage has.
+        e.g. more correct letters than the passage has. Practice drills have no
+        timer, so they pass a longer max_seconds.
         """
         try:
             correct = int(data["correct"])
@@ -60,12 +61,12 @@ class TypingSession:
         if total == 0:
             raise ValueError("No keys were pressed.")
         # Allow a little extra time for the browser to send the result.
-        if not 0 < seconds <= TEST_SECONDS + 1:
+        if not 0 < seconds <= max_seconds + 1:
             raise ValueError("The test time is not possible.")
         if not isinstance(key_errors, dict):
             raise ValueError("key_errors must be a dictionary.")
 
-        session = cls(passage, correct, total, key_errors, min(seconds, TEST_SECONDS))
+        session = cls(passage, correct, total, key_errors, min(seconds, max_seconds))
         # Found in testing: a script typed a whole passage in a split second and
         # saved 16,720 WPM. No person can type that fast, so it is not saved.
         if session.wpm() > MAX_WPM:

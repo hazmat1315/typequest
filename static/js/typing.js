@@ -1,8 +1,11 @@
-// Typing test.  Owner: Lucas (L3, L4, L5, L6, L7, L8, L9).
+// Typing engine.  Owner: Lucas (L3, L4, L5, L6, L7, L8, L9).
 //
-// The file has two parts:
-//   1. TypingTest - the rules of the test (no web page code), so it can be tested on its own.
-//   2. Page code  - connects TypingTest to test.html: colours, timer, buttons, sending the result.
+// The file has three parts:
+//   1. TypingTest - the rules of typing a passage (no web page code), so it can be tested on its own.
+//   2. TypingBox  - connects a TypingTest to a passage box and a typing input: colours each
+//                   letter, blocks Backspace and paste. Reused by George's practice page
+//                   (practice.js, G12) instead of copying this code.
+//   3. Page code  - the typing test page (test.html): timer, buttons, sending the result.
 //
 // Following the typing test flowchart, every key press moves on to the next letter.
 // A right key turns the letter green; a wrong key turns it red and records a mistake
@@ -87,8 +90,101 @@ class TypingTest {
   }
 }
 
+// ---------------------------------------------------------------------------
+// TypingBox: the typing input and coloured passage, shared by the test and practice pages.
+// ---------------------------------------------------------------------------
+
+class TypingBox {
+  // passageBox: the element that shows the passage; input: the <input> students type in.
+  // handlers (all optional): onFirstKey(), onKey(isCorrect), onFinish()
+  constructor(passageBox, input, handlers = {}) {
+    this.passageBox = passageBox;
+    this.input = input;
+    this.handlers = handlers;
+    this.test = null;
+    this.letterSpans = [];
+    this.typedText = "";   // what the input box should show
+    this.stopped = true;
+
+    input.addEventListener("keydown", (event) => this.keydown(event));
+    // L9: block pasting, dragging text in and the right-click menu.
+    ["paste", "drop", "contextmenu"].forEach((eventName) =>
+      input.addEventListener(eventName, (event) => event.preventDefault()),
+    );
+    // Safety net: if anything else changes the box (autofill, other keyboards),
+    // put back exactly what was typed through the test.
+    input.addEventListener("input", () => {
+      input.value = this.typedText;
+    });
+    // Clicking on the passage puts the cursor in the typing box.
+    passageBox.addEventListener("click", () => input.focus());
+  }
+
+  // Show a new passage and get ready for the first key.
+  load(text, level) {
+    this.test = new TypingTest(text, level);
+    this.typedText = "";
+    this.stopped = false;
+
+    // One span per letter, so each letter can be coloured on its own.
+    this.passageBox.replaceChildren();
+    this.letterSpans = Array.from(text, (character) => {
+      const span = document.createElement("span");
+      span.textContent = character;
+      this.passageBox.appendChild(span);
+      return span;
+    });
+    this.letterSpans[0].classList.add("current");
+
+    this.input.value = "";
+    this.input.disabled = false;
+    this.input.focus();
+  }
+
+  // No more typing (the test or drill is over).
+  stop() {
+    this.stopped = true;
+    this.input.disabled = true;
+  }
+
+  keydown(event) {
+    if (this.stopped) return;
+    // Let shortcuts like Ctrl+R through, but Ctrl+V/Cmd+V is blocked by the paste handler.
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    // No going back: Backspace and Delete do nothing.
+    if (event.key === "Backspace" || event.key === "Delete") {
+      event.preventDefault();
+      return;
+    }
+    // Only single printable characters count (not Shift, arrows, Tab and so on).
+    if (event.key.length !== 1) return;
+    event.preventDefault();
+    this.typeCharacter(event.key);
+  }
+
+  typeCharacter(character) {
+    const test = this.test;
+    if (test.total === 0 && this.handlers.onFirstKey) this.handlers.onFirstKey();
+
+    // L3: colour the letter, then move the cursor on.
+    const span = this.letterSpans[test.position];
+    const isCorrect = test.type(character);
+    span.classList.remove("current");
+    span.classList.add(isCorrect ? "correct" : "incorrect");
+    if (!test.isFinished()) this.letterSpans[test.position].classList.add("current");
+
+    this.typedText += character;
+    this.input.value = this.typedText;
+    this.input.scrollLeft = this.input.scrollWidth; // keep the newest letters in view
+    if (this.handlers.onKey) this.handlers.onKey(isCorrect);
+
+    // L6: finishing the passage ends early.
+    if (test.isFinished() && this.handlers.onFinish) this.handlers.onFinish();
+  }
+}
+
 // Lets Node.js load TypingTest for testing. Browsers skip this line.
-if (typeof module !== "undefined") module.exports = { TypingTest, keyName, round1 };
+if (typeof module !== "undefined") module.exports = { TypingTest, TypingBox, keyName, round1 };
 
 // ---------------------------------------------------------------------------
 // Page code: only runs in the browser on the typing test page.
@@ -96,8 +192,6 @@ if (typeof module !== "undefined") module.exports = { TypingTest, keyName, round
 
 if (typeof document !== "undefined" && document.getElementById("typing-test")) {
   const page = document.getElementById("typing-test");
-  const passageBox = document.getElementById("passage");
-  const input = document.getElementById("typing-input");
   const timeLeftDisplay = document.getElementById("time-left");
   const wpmDisplay = document.getElementById("live-wpm");
   const accuracyDisplay = document.getElementById("live-accuracy");
@@ -110,34 +204,28 @@ if (typeof document !== "undefined" && document.getElementById("typing-test")) {
   const resultUrl = page.dataset.resultUrl;
   const startMessage = statusLine.textContent;
 
-  let test;              // the current TypingTest
-  let letterSpans;       // one <span> per letter of the passage
   let startTime = null;  // when the first key was pressed
   let timerId = null;
   let ended = false;
-  let typedText = "";    // what the input box should show
+
+  const box = new TypingBox(document.getElementById("passage"), document.getElementById("typing-input"), {
+    // L4: the timer starts on the first key press, not when the page loads.
+    onFirstKey() {
+      startTime = performance.now();
+      timerId = setInterval(tick, 100);
+    },
+    onKey: updateLiveStats,
+    onFinish: endTest,
+  });
 
   // Show a new passage and reset everything (used on load, by Restart and by the level buttons).
   function setUpTest(text, level) {
     clearInterval(timerId);
-    test = new TypingTest(text, level);
     startTime = null;
     timerId = null;
     ended = false;
-    typedText = "";
+    box.load(text, level);
 
-    // One span per letter, so each letter can be coloured on its own.
-    passageBox.replaceChildren();
-    letterSpans = Array.from(text, (character) => {
-      const span = document.createElement("span");
-      span.textContent = character;
-      passageBox.appendChild(span);
-      return span;
-    });
-    letterSpans[0].classList.add("current");
-
-    input.value = "";
-    input.disabled = false;
     restartButton.disabled = false;
     timeLeftDisplay.textContent = formatTime(TEST_SECONDS);
     wpmDisplay.textContent = "-";
@@ -149,7 +237,6 @@ if (typeof document !== "undefined" && document.getElementById("typing-test")) {
       button.classList.toggle("selected", selected);
       button.setAttribute("aria-pressed", String(selected));
     });
-    input.focus();
   }
 
   // 42 -> "0:42"
@@ -164,8 +251,8 @@ if (typeof document !== "undefined" && document.getElementById("typing-test")) {
 
   function updateLiveStats() {
     // Use at least 1 second so the WPM does not jump to a silly number on the first key.
-    wpmDisplay.textContent = test.wpm(Math.max(secondsTaken(), 1));
-    accuracyDisplay.textContent = `${test.accuracy()}%`;
+    wpmDisplay.textContent = box.test.wpm(Math.max(secondsTaken(), 1));
+    accuracyDisplay.textContent = `${box.test.accuracy()}%`;
   }
 
   // L4: called 10 times a second once the timer has started.
@@ -176,37 +263,15 @@ if (typeof document !== "undefined" && document.getElementById("typing-test")) {
     if (remaining <= 0) endTest();
   }
 
-  function handleCharacter(character) {
-    // L4: the timer starts on the first key press, not when the page loads.
-    if (startTime === null) {
-      startTime = performance.now();
-      timerId = setInterval(tick, 100);
-    }
-
-    // L3: colour the letter, then move the cursor on.
-    const span = letterSpans[test.position];
-    const isCorrect = test.type(character);
-    span.classList.remove("current");
-    span.classList.add(isCorrect ? "correct" : "incorrect");
-    if (!test.isFinished()) letterSpans[test.position].classList.add("current");
-
-    typedText += character;
-    input.value = typedText;
-    input.scrollLeft = input.scrollWidth; // keep the newest letters in view
-    updateLiveStats();
-
-    // L6: finishing the passage ends the test early.
-    if (test.isFinished()) endTest();
-  }
-
   // L6, L7: stop the test and send the result to the server.
   async function endTest() {
     if (ended) return;
     ended = true;
     clearInterval(timerId);
-    input.disabled = true;
+    box.stop();
     restartButton.disabled = true;
 
+    const test = box.test;
     const seconds = secondsTaken();
     timeLeftDisplay.textContent = formatTime(TEST_SECONDS - seconds);
     wpmDisplay.textContent = test.wpm(seconds);
@@ -245,35 +310,7 @@ if (typeof document !== "undefined" && document.getElementById("typing-test")) {
     }
   }
 
-  input.addEventListener("keydown", (event) => {
-    if (ended) return;
-    // Let shortcuts like Ctrl+R through, but Ctrl+V/Cmd+V is blocked by the paste handler below.
-    if (event.ctrlKey || event.metaKey || event.altKey) return;
-    // No going back: Backspace and Delete do nothing.
-    if (event.key === "Backspace" || event.key === "Delete") {
-      event.preventDefault();
-      return;
-    }
-    // Only single printable characters count (not Shift, arrows, Tab and so on).
-    if (event.key.length !== 1) return;
-    event.preventDefault();
-    handleCharacter(event.key);
-  });
-
-  // L9: block pasting, dragging text in and the right-click menu.
-  ["paste", "drop", "contextmenu"].forEach((eventName) =>
-    input.addEventListener(eventName, (event) => event.preventDefault()),
-  );
-  // Safety net: if anything else changes the box (autofill, other keyboards),
-  // put back exactly what was typed through the test.
-  input.addEventListener("input", () => {
-    input.value = typedText;
-  });
-
-  // Clicking on the passage puts the cursor in the typing box.
-  passageBox.addEventListener("click", () => input.focus());
-
-  restartButton.addEventListener("click", () => loadNewPassage(test.level));
+  restartButton.addEventListener("click", () => loadNewPassage(box.test.level));
   levelButtons.forEach((button) =>
     button.addEventListener("click", () => loadNewPassage(button.dataset.level)),
   );

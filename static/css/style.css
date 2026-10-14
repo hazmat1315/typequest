@@ -1,6 +1,7 @@
-/* TypeQuest styles.  Owner: Lucas (UI).
-   Iteration 1 is deliberately plain. Rules from the spec:
-   text at least 16px, big clearly labelled buttons, mistakes underlined as well as red. */
+/* TypeQuest styles.  Owner: Lucas (UI). L18
+   One stylesheet for every page, using the colours from Lucas's mockups.
+   Rules from the spec: text at least 16px, big clearly labelled buttons,
+   mistakes underlined as well as red, heatmap colours safe for colour blindness. */
 
 :root {
   --ink: #1f2933;
@@ -16,6 +17,19 @@
   --wrong: #c62828;
   --wrong-background: #fde2e2;
   --link: #2850a8;
+  --game: #ffa8c5;          /* PLAY GAME button (Mockup 2) */
+  --game-hover: #ff8bb2;
+  --practice: #8fd3e0;      /* PRACTICE button */
+  --practice-hover: #6cc4d4;
+  --graph: #3b4cca;         /* progress graph line (Mockup 7) */
+  --ground: #e8202a;        /* game ground bar (Mockup 5) */
+  --life: #e8202a;
+  /* G8 heatmap: the Okabe-Ito palette, chosen so the colours can be told apart
+     with the common types of colour blindness. Black text passes contrast on all. */
+  --heat-green: #009e73;
+  --heat-orange: #e69f00;
+  --heat-red: #d55e00;
+  --heat-grey: #e4e7eb;
 }
 
 * {
@@ -60,7 +74,25 @@ h2 {
 
 .topbar nav {
   display: flex;
-  gap: 1.5rem;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.topbar nav a {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.topbar nav a:hover {
+  text-decoration: underline;
+}
+
+/* The page you are on */
+.topbar nav a[aria-current="page"] {
+  color: var(--ink);
+  font-weight: bold;
+  background: var(--logo);
 }
 
 .page {
@@ -248,8 +280,14 @@ input:focus {
 }
 
 .activity {
+  flex: 1 1 220px;
   text-align: center;
-  min-width: 260px;
+}
+
+.activity-icon {
+  font-size: 3rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
 }
 
 .activity p {
@@ -265,6 +303,42 @@ input:focus {
 
 .test-button:hover {
   background: #f5d800;
+}
+
+.game-button,
+.practice-button {
+  text-transform: uppercase;
+}
+
+.game-button {
+  background: var(--game);
+  font-size: 1.2rem;
+}
+
+.game-button:hover {
+  background: var(--game-hover);
+}
+
+.practice-button {
+  background: var(--practice);
+}
+
+.home .practice-button,
+.activity .practice-button {
+  font-size: 1.2rem;
+}
+
+.practice-button:hover {
+  background: var(--practice-hover);
+}
+
+.stat.streak .stat-value::before {
+  content: "🔥 ";
+}
+
+.tip-of-the-day {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
 }
 
 /* ---------- Typing test ---------- */
@@ -372,6 +446,413 @@ input:focus {
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
   margin-top: 2rem;
+}
+
+/* ---------- Personal best badge (H15) ---------- */
+
+.badge {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  background: var(--go);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  animation: pop 0.5s ease-out;
+}
+
+@keyframes pop {
+  0% { transform: scale(0.6); }
+  70% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+/* ---------- Keyboard heatmap (G8) ---------- */
+
+.keyboard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.keyboard-row {
+  display: flex;
+  gap: 0.35rem;
+}
+
+/* Each row is shifted right like a real keyboard. */
+.keyboard-row.row-2 { padding-left: 1rem; }
+.keyboard-row.row-3 { padding-left: 2.25rem; }
+.keyboard-row.row-4 { padding-left: 3.5rem; }
+
+.key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  font-weight: bold;
+  color: #000;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  cursor: default;
+}
+
+.key.space {
+  width: 14rem;
+  font-weight: normal;
+}
+
+.key.green { background: var(--heat-green); }
+.key.orange { background: var(--heat-orange); }
+
+/* Red keys also get stripes and a thick border, so they stand out without colour. */
+.key.red {
+  background: repeating-linear-gradient(45deg, var(--heat-red) 0 6px, #a84a00 6px 9px);
+  border-width: 3px;
+}
+
+.key.grey {
+  background: var(--heat-grey);
+  color: var(--muted);
+  border-style: dashed;
+}
+
+.key:hover,
+.key:focus {
+  outline: 3px solid var(--link);
+  outline-offset: 2px;
+}
+
+.legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.25rem 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  font-size: 16px;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.key.mini {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* ---------- Game (Mockup 5) ---------- */
+
+.game-stats {
+  margin-bottom: 1rem;
+}
+
+.game-stats .stat {
+  flex: 1 1 140px;
+}
+
+.lives {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.6rem 0;
+}
+
+.life {
+  width: 1.6rem;
+  height: 1.6rem;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--life);
+}
+
+.life.lost {
+  background: var(--paper);
+}
+
+.play-area {
+  position: relative;
+  height: 420px;
+  overflow: hidden;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+}
+
+.play-area.hit {
+  animation: hit 0.4s ease-out;
+}
+
+@keyframes hit {
+  0% { background: var(--wrong-background); }
+  100% { background: var(--paper); }
+}
+
+.falling-word {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.2rem 0.6rem;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 1.3rem;
+  font-weight: bold;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+/* L11: the word that matches what you have typed turns green. */
+.falling-word.match {
+  background: var(--go);
+}
+
+.falling-word .typed {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+}
+
+.falling-word.matched {
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.falling-word.landed {
+  background: var(--wrong-background);
+  border-color: var(--wrong);
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+
+.ground {
+  padding: 0.3rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+  text-align: center;
+  color: #fff;
+  background: var(--ground);
+  border: 2px solid var(--ink);
+  border-radius: 0 0 4px 4px;
+}
+
+.game-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+  background: rgba(243, 246, 249, 0.95);
+}
+
+.game-panel[hidden] {
+  display: none;
+}
+
+.game-panel p {
+  margin: 0 0 0.75rem;
+}
+
+.game-panel .final {
+  font-size: 1.5rem;
+}
+
+kbd {
+  padding: 0.05rem 0.4rem;
+  font-family: inherit;
+  font-weight: bold;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-bottom-width: 4px;
+  border-radius: 4px;
+}
+
+.typing-input.wrong {
+  animation: shake 0.3s;
+  border-color: var(--wrong);
+}
+
+@keyframes shake {
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.stat.level-up {
+  animation: level-flash 1.2s ease-out;
+}
+
+@keyframes level-flash {
+  0% { background: var(--highlight); transform: scale(1.08); }
+  30% { transform: scale(1); }
+  100% { background: var(--paper); }
+}
+
+.actions.centred {
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+/* ---------- Practice (Mockup 6) ---------- */
+
+.weak-keys {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.key-list {
+  display: flex;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.key-list .none {
+  color: var(--muted);
+}
+
+.passage.drill {
+  word-spacing: 0.3rem;
+}
+
+.drill-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.drill-progress {
+  flex: 1 1 240px;
+}
+
+.drill-progress label {
+  margin-top: 0;
+}
+
+progress {
+  width: 100%;
+  height: 1.5rem;
+  accent-color: var(--graph);
+}
+
+.drill-results {
+  margin-top: 1rem;
+}
+
+.before-after {
+  padding-left: 1.25rem;
+  font-size: 1.2rem;
+}
+
+.before-after .better {
+  color: var(--right);
+  font-weight: bold;
+}
+
+h3 {
+  font-size: 1.1rem;
+  margin: 1rem 0 0.5rem;
+}
+
+/* ---------- Progress and leaderboard (Mockup 7) ---------- */
+
+.progress-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+
+.graph-box {
+  position: relative;
+  height: 320px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.graph-box.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.button.filter.selected {
+  background: var(--highlight);
+}
+
+.leaderboard {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--paper);
+}
+
+.leaderboard th,
+.leaderboard td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border: 2px solid var(--ink);
+}
+
+.leaderboard th {
+  background: #cbd2d9;
+}
+
+.leaderboard th:last-child,
+.leaderboard td:last-child {
+  text-align: right;
+}
+
+/* H12: the current user is highlighted so they are easy to find. */
+.leaderboard tr.you {
+  font-weight: bold;
+  background: var(--highlight);
+}
+
+.your-rank {
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.5rem;
+  font-weight: bold;
+  background: var(--highlight);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+}
+
+.your-rank[hidden] {
+  display: none;
+}
+
+/* Small screens: smaller keyboard keys so the heatmap fits. */
+@media (max-width: 520px) {
+  .key { width: 1.9rem; height: 2.1rem; }
+  .key.space { width: 10rem; }
+  .keyboard-row { gap: 0.2rem; }
+  .play-area { height: 360px; }
 }

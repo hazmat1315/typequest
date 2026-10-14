@@ -1,4 +1,4 @@
-"""Per-key mistake tracking and weak-key detection.  Owner: George (G1, G2, G3, G4).
+"""Per-key mistake tracking, weak keys and heatmap bands.  Owner: George (G1-G4, G8).
 
 key_errors is the dictionary typing.js sends after each test. For every key the
 student was supposed to press, it says how many times that key came up and how
@@ -12,6 +12,7 @@ import string
 TRACKED_KEYS = tuple(string.ascii_lowercase) + ("space",)  # 26 letters and space
 MIN_PRESSES = 10         # G3: keys pressed fewer times than this are ignored
 WEAK_THRESHOLD = 15      # G4: a key is weak if its error rate is ABOVE this percentage
+FINE_THRESHOLD = 5       # G8: a key is fine (green) if its error rate is BELOW this percentage
 
 
 class KeyStats:
@@ -49,6 +50,23 @@ class KeyStats:
         if presses < MIN_PRESSES:
             return None
         return self.errors.get(key, 0) * 100 / presses
+
+    def band(self, key):
+        """G8: the heatmap colour for a key, using the bands in Section 2.4.
+
+        grey   = fewer than 10 presses (not enough data yet)
+        green  = below 5%
+        orange = 5% to 15%
+        red    = above 15% (the same rule as a weak key in G4)
+        """
+        rate = self.error_rate(key)
+        if rate is None:
+            return "grey"
+        if rate < FINE_THRESHOLD:
+            return "green"
+        if rate <= WEAK_THRESHOLD:
+            return "orange"
+        return "red"
 
     def weakest(self, n=3):
         """The n worst keys with an error rate above 15%, worst first (G4).

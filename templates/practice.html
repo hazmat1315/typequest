@@ -1,0 +1,66 @@
+{# Adaptive practice drill (Mockup 6). Owner: George. G10-G14
+   The typing box is Lucas's TypingBox from typing.js (reused, not copied). #}
+{% extends "base.html" %}
+{% block title %}Practice{% endblock %}
+
+{% block content %}
+<div id="practice"
+     data-drill='{{ drill|tojson }}'
+     data-drill-url="{{ url_for('next_drill') }}"
+     data-result-url="{{ url_for('save_drill_result') }}">
+
+  <h1>Your custom drill</h1>
+  <div class="weak-keys">
+    <span>Your weakest keys:</span>
+    <ul id="weak-keys" class="key-list">
+      {% for key in drill.weak_keys %}
+      <li class="key {{ key.band }}" title="{{ key.label }}: {{ key.percent }}% wrong">{{ key.label }}</li>
+      {% else %}
+      <li class="none">None yet</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <p id="drill-message" class="hint">{{ drill.message }}</p>
+
+  <div class="passage drill" id="drill-passage" aria-label="Words to type">{{ drill.text }}</div>
+
+  <label for="drill-input" class="visually-hidden">Type the words here</label>
+  <input id="drill-input" class="typing-input" placeholder="Type the words..."
+         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
+
+  <div class="drill-controls">
+    <div class="drill-progress">
+      <label for="drill-progress">Progress</label>
+      <progress id="drill-progress" max="{{ drill.text|length }}" value="0"></progress>
+    </div>
+    <button type="button" id="new-drill" class="button">New drill</button>
+    <button type="button" id="finish" class="button go">Finish</button>
+  </div>
+  <p id="drill-status" class="hint" role="status" aria-live="polite">
+    No timer: take your time and get the letters right. You can't go back!
+  </p>
+
+  <section id="drill-results" class="card drill-results" hidden>
+    <h2>Drill done!</h2>
+    <div class="stats compact">
+      <div class="stat">
+        <span class="stat-label">WPM</span>
+        <span class="stat-value" id="drill-wpm">-</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Accuracy</span>
+        <span class="stat-value" id="drill-accuracy">-</span>
+      </div>
+    </div>
+    <div id="before-after-section">
+      <h3>Your focus keys, before and after</h3>
+      <ul id="before-after" class="before-after"></ul>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/typing.js') }}"></script>
+<script src="{{ url_for('static', filename='js/practice.js') }}"></script>
+{% endblock %}

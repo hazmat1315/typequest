@@ -1,30 +1,121 @@
 {
-  "a": "Use your left pinky finger. A is its home key, so let your pinky rest on A whenever you are not using it.",
-  "b": "Use your left pointer finger. Reach down and to the right from F, then go straight back to F.",
-  "c": "Use your left middle finger. Reach down from D to C, then bring it back to D.",
-  "d": "Use your left middle finger. D is its home key, so keep that finger resting on D.",
-  "e": "Use your left middle finger. Reach up from D to E, then bring it straight back to D.",
-  "f": "Use your left pointer finger. F is its home key. Feel for the little bump on F to find it without looking.",
-  "g": "Use your left pointer finger. Slide one key to the right from F, then come back to F.",
-  "h": "Use your right pointer finger. Slide one key to the left from J, then come back to J.",
-  "i": "Use your right middle finger. Reach up from K to I, then bring it back to K.",
-  "j": "Use your right pointer finger. J is its home key. Feel for the little bump on J to find it without looking.",
-  "k": "Use your right middle finger. K is its home key, so keep that finger resting on K.",
-  "l": "Use your right ring finger. L is its home key, so keep that finger resting on L.",
-  "m": "Use your right pointer finger. Reach down from J to M, then bring it back to J.",
-  "n": "Use your right pointer finger. Reach down and a little left from J to N, then go back to J.",
-  "o": "Use your right ring finger. Reach up from L to O, then bring it back to L.",
-  "p": "Use your right pinky finger. Reach up from the ; key to P, then go back to ;.",
-  "q": "Use your left pinky finger. Reach up from A to Q, then bring it back to A.",
-  "r": "Use your left pointer finger. Reach up from F to R, then bring it back to F.",
-  "s": "Use your left ring finger. S is its home key, so keep that finger resting on S.",
-  "t": "Use your left pointer finger. Reach up and to the right from F to T, then go back to F.",
-  "u": "Use your right pointer finger. Reach up from J to U, then bring it back to J.",
-  "v": "Use your left pointer finger. Reach down from F to V, then bring it back to F.",
-  "w": "Use your left ring finger. Reach up from S to W, then bring it back to S.",
-  "x": "Use your left ring finger. Reach down from S to X, then bring it back to S.",
-  "y": "Use your right pointer finger. Reach up and to the left from J to Y, then go back to J.",
-  "z": "Use your left pinky finger. Reach down from A to Z, then bring it back to A.",
-  "space": "Tap the space bar with your thumb while your other fingers stay on the home row (A S D F and J K L ;).",
-  "great_job": "Great job! None of your keys have a high mistake rate. Keep your fingers on the home row (A S D F and J K L ;) and try a harder level."
+  "a": [
+    "Use your left pinky finger. A is its home key, so let your pinky rest on A whenever you are not using it.",
+    "Keep your left pinky finger curved and resting lightly on A. Try typing 'a sad lad' slowly without looking down."
+  ],
+  "b": [
+    "Use your left pointer finger. Reach down and to the right from F, then go straight back to F.",
+    "B is a long stretch for your left pointer finger, so move your whole hand a little from F instead of twisting it. Never use your right hand for B."
+  ],
+  "c": [
+    "Use your left middle finger. Reach down from D to C, then bring it back to D.",
+    "Keep your left middle finger on D and curl it down to C. Practise 'cat', 'cod' and 'ice' slowly and smoothly."
+  ],
+  "d": [
+    "Use your left middle finger. D is its home key, so keep that finger resting on D.",
+    "Your left middle finger should press D without looking. Practise 'dad did add' while your other fingers stay on A, S and F."
+  ],
+  "e": [
+    "Use your left middle finger. Reach up from D to E, then bring it straight back to D.",
+    "E is the most common letter in English, so it is worth getting right. Try 'see', 'tree' and 'free' with your left middle finger going up from D and back."
+  ],
+  "f": [
+    "Use your left pointer finger. F is its home key. Feel for the little bump on F to find it without looking.",
+    "Your left pointer finger lives on F. After every reach (to R, T, G, V or B) bring it home to F before the next letter."
+  ],
+  "g": [
+    "Use your left pointer finger. Slide one key to the right from F, then come back to F.",
+    "Only your left pointer finger types G. Stretch it right from F without moving your other fingers off A, S and D."
+  ],
+  "h": [
+    "Use your right pointer finger. Slide one key to the left from J, then come back to J.",
+    "Only your right pointer finger types H. Stretch it left from J while your other fingers stay on K, L and ;."
+  ],
+  "i": [
+    "Use your right middle finger. Reach up from K to I, then bring it back to K.",
+    "Practise 'it is in' slowly. Your right middle finger reaches up from K to I, and your other fingers stay on the home row."
+  ],
+  "j": [
+    "Use your right pointer finger. J is its home key. Feel for the little bump on J to find it without looking.",
+    "Your right pointer finger lives on J. After reaching for U, Y, H, N or M, always bring it home to J."
+  ],
+  "k": [
+    "Use your right middle finger. K is its home key, so keep that finger resting on K.",
+    "Practise 'kick' and 'kite' slowly. Your right middle finger presses K without leaving the home row."
+  ],
+  "l": [
+    "Use your right ring finger. L is its home key, so keep that finger resting on L.",
+    "Keep your right ring finger curved over L. Practise 'all', 'fall' and 'hill' to get used to pressing L twice."
+  ],
+  "m": [
+    "Use your right pointer finger. Reach down from J to M, then bring it back to J.",
+    "Curl your right pointer finger down from J to press M. Practise 'mum', 'jam' and 'mojo' slowly."
+  ],
+  "n": [
+    "Use your right pointer finger. Reach down and a little left from J to N, then go back to J.",
+    "N sits just below and left of J. Your right pointer finger reaches it; don't use your left hand. Try 'nine' and 'nap'."
+  ],
+  "o": [
+    "Use your right ring finger. Reach up from L to O, then bring it back to L.",
+    "Your right ring finger reaches up from L to O. Practise 'look', 'pool' and 'too', bringing the finger back to L each time."
+  ],
+  "p": [
+    "Use your right pinky finger. Reach up from the ; key to P, then go back to ;.",
+    "P is a reach for your weakest finger. Keep your right pinky finger curved, reach up from ; to P, and practise 'pop' and 'pup' slowly."
+  ],
+  "q": [
+    "Use your left pinky finger. Reach up from A to Q, then bring it back to A.",
+    "Q is rare but easy to miss. Your left pinky finger reaches up from A; keep your other fingers on S, D and F. Q is nearly always followed by U."
+  ],
+  "r": [
+    "Use your left pointer finger. Reach up from F to R, then bring it back to F.",
+    "Practise 'rr' words like 'error' and 'mirror'. Your left pointer finger goes up from F to R and back each time."
+  ],
+  "s": [
+    "Use your left ring finger. S is its home key, so keep that finger resting on S.",
+    "Your left ring finger lives on S. Practise 'sass' and 'miss' without letting your hand drift off A S D F."
+  ],
+  "t": [
+    "Use your left pointer finger. Reach up and to the right from F to T, then go back to F.",
+    "T is very common. Your left pointer finger stretches up and right from F. Practise 'that', 'tent' and 'test'."
+  ],
+  "u": [
+    "Use your right pointer finger. Reach up from J to U, then bring it back to J.",
+    "Your right pointer finger goes straight up from J to U. Practise 'up', 'run' and 'fun' slowly and smoothly."
+  ],
+  "v": [
+    "Use your left pointer finger. Reach down from F to V, then bring it back to F.",
+    "Curl your left pointer finger down from F to press V. Practise 'van', 'have' and 'five'."
+  ],
+  "w": [
+    "Use your left ring finger. Reach up from S to W, then bring it back to S.",
+    "Your left ring finger goes up from S to W. Practise 'we', 'was' and 'wow', keeping your pinky resting on A."
+  ],
+  "x": [
+    "Use your left ring finger. Reach down from S to X, then bring it back to S.",
+    "X is a short reach down for your left ring finger from S. Practise 'box', 'six' and 'fox' slowly."
+  ],
+  "y": [
+    "Use your right pointer finger. Reach up and to the left from J to Y, then go back to J.",
+    "Y is easy to mix up with T. Use your right pointer finger from J, not your left hand. Practise 'yes', 'you' and 'yay'."
+  ],
+  "z": [
+    "Use your left pinky finger. Reach down from A to Z, then bring it back to A.",
+    "Z is a reach down for your left pinky finger from A. Keep your wrist still and practise 'zoo' and 'zip'."
+  ],
+  "space": [
+    "Tap the space bar with your thumb while your other fingers stay on the home row (A S D F and J K L ;).",
+    "Use only one thumb for the space bar every time, and keep your fingers on the home row (A S D F and J K L ;) while you tap it."
+  ],
+  "great_job": "Great job! None of your keys have a high mistake rate. Keep your fingers on the home row (A S D F and J K L ;) and try a harder level.",
+  "tip_of_the_day": [
+    "Keep your fingers on the home row (A S D F and J K L ;) whenever you are not pressing a key.",
+    "Feel for the little bumps on F and J. They let you find the home row without looking down.",
+    "Look at the screen, not at your hands. It feels slow at first, but it makes you much faster.",
+    "Accuracy first, speed second. Typing slowly without mistakes is the fastest way to get faster.",
+    "Sit up straight with your feet flat on the floor and your wrists slightly raised off the desk.",
+    "Use the thumb you are most comfortable with for the space bar, and use the same one every time.",
+    "Ten minutes of practice every day is better than one hour once a week. Keep your streak going!",
+    "Each finger has its own keys. Bring every finger back to its home key after you press a key."
+  ]
 }

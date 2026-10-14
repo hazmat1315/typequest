@@ -131,9 +131,11 @@ def test_G5_tips_name_the_finger_and_home_key():
     tips = TipEngine().tips
     fingers = ("pinky", "ring", "middle", "pointer", "thumb")
     for key in string.ascii_lowercase:
-        assert any(finger in tips[key] for finger in fingers), key
-        assert any(home in tips[key] for home in "ASDFJKL;"), key
-    assert "thumb" in tips["space"] and "home row" in tips["space"]
+        for tip in tips[key]:  # Iteration 2: every key has a list of tips (G15)
+            assert any(finger in tip for finger in fingers), key
+            assert any(home in tip for home in "ASDFJKL;"), key
+    for tip in tips["space"]:
+        assert "thumb" in tip and "home row" in tip
 
 
 def test_G6_one_tip_per_weak_key_with_percentage():

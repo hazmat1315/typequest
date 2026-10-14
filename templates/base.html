@@ -1,21 +1,30 @@
 <!doctype html>
-<!-- Shared page layout. Owner: Lucas (UI). Every screen extends this so the
-     header, nav links and messages are written once. -->
+<!-- Shared page layout. Owner: Lucas (UI). L18
+     Every screen extends this, so the header, nav bar and messages are written once. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}TypeQuest{% endblock %} | TypeQuest</title>
-  <link rel="icon" href="data:,">{# no icon yet (Iteration 2); stops Chrome asking for /favicon.ico #}
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   {% if session.user_id %}
+  {# Every page can be reached from here in one click (usability requirement). #}
+  {% set nav = [
+      ("home", "Home"),
+      ("typing_test", "Test"),
+      ("game", "Game"),
+      ("practice", "Practice"),
+      ("progress", "Progress"),
+  ] %}
   <header class="topbar">
     <a class="logo" href="{{ url_for('home') }}">TypeQuest</a>
-    <nav>
-      <a href="{{ url_for('home') }}">Home</a>
-      <a href="{{ url_for('typing_test') }}">Test</a>
+    <nav aria-label="Main">
+      {% for endpoint, label in nav %}
+      <a href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint %} aria-current="page"{% endif %}>{{ label }}</a>
+      {% endfor %}
       <a href="{{ url_for('logout') }}">Logout</a>
     </nav>
   </header>

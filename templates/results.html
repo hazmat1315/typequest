@@ -1,6 +1,6 @@
 {# Results and tips screen (Mockup 4).
-   Owners: Lucas (results section) and George (tips section).
-   The heatmap, personal best badge and Practise button are added in Iteration 2. #}
+   Owners: Lucas (results section), Henry (personal best badge, H15) and
+   George (tips section G6, G7, G15 and heatmap G8). #}
 {% extends "base.html" %}
 {% block title %}Your results{% endblock %}
 
@@ -12,42 +12,77 @@
 {% else %}
 <div class="results-layout">
 
-  {# ---------- Results section (Lucas) - L5 ---------- #}
-  <section>
-    <h1>Your results</h1>
-    <div class="stats">
-      <div class="stat">
-        <span class="stat-label">WPM</span>
-        <span class="stat-value" id="result-wpm">{{ result.wpm }}</span>
+  <div>
+    {# ---------- Results section (Lucas) - L5 ---------- #}
+    <section>
+      <h1>Your results</h1>
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-label">WPM</span>
+          <span class="stat-value" id="result-wpm">{{ result.wpm }}</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Accuracy</span>
+          <span class="stat-value" id="result-accuracy">{{ result.accuracy }}%</span>
+        </div>
       </div>
-      <div class="stat">
-        <span class="stat-label">Accuracy</span>
-        <span class="stat-value" id="result-accuracy">{{ result.accuracy }}%</span>
-      </div>
-    </div>
-    <p class="hint">Level: {{ result.level|capitalize }}. Saved to your account.</p>
-  </section>
 
-  {# ---------- Tips section (George) - G6, G7 ---------- #}
+      {# ---------- Personal best badge (Henry) - H15 ---------- #}
+      {% if new_best %}
+      <p class="badge" id="personal-best" role="status">🏆 New personal best!</p>
+      {% endif %}
+      <p class="hint">Level: {{ result.level|capitalize }}. Saved to your account.</p>
+    </section>
+
+    {# ---------- Tips section (George) - G6, G7, G15 ---------- #}
+    <section>
+      <h2>Your tips</h2>
+      <ul class="tips">
+        {% for tip in tips %}
+        <li class="tip{% if tip.key is none %} great{% endif %}">
+          {% if tip.key is not none %}
+            <strong>{{ tip.key }} ({{ tip.percent }}% wrong):</strong>
+          {% endif %}
+          {{ tip.text }}
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="help">Tips are based on every test, game and drill you have done, so they get more accurate the more you practise.</p>
+    </section>
+  </div>
+
+  {# ---------- Keyboard mistake heatmap (George) - G8 ---------- #}
   <section>
-    <h2>Your tips</h2>
-    <ul class="tips">
-      {% for tip in tips %}
-      <li class="tip{% if tip.key is none %} great{% endif %}">
-        {% if tip.key is not none %}
-          <strong>{{ tip.key }} ({{ tip.percent }}% wrong):</strong>
-        {% endif %}
-        {{ tip.text }}
-      </li>
+    <h2>Mistake heatmap</h2>
+    <div class="keyboard" role="list" aria-label="Your mistakes on each key">
+      {% for row in heatmap %}
+      <div class="keyboard-row row-{{ loop.index }}" role="none">
+        {% for key in row %}
+          {% if key.percent is none %}
+            {% set detail = "not enough presses yet (" ~ key.presses ~ ")" %}
+          {% else %}
+            {% set detail = key.percent ~ "% wrong" %}
+          {% endif %}
+        <span class="key {{ key.band }}{% if key.name == 'space' %} space{% endif %}" role="listitem"
+              tabindex="0" title="{{ key.label }}: {{ detail }}" aria-label="{{ key.label }}: {{ detail }}"
+              data-band="{{ key.band }}">{{ "space" if key.name == "space" else key.label }}</span>
+        {% endfor %}
+      </div>
       {% endfor %}
+    </div>
+    <ul class="legend">
+      <li><span class="key red mini"></span> Lots of mistakes (over 15%)</li>
+      <li><span class="key orange mini"></span> Some mistakes (5% to 15%)</li>
+      <li><span class="key green mini"></span> Fine (under 5%)</li>
+      <li><span class="key grey mini"></span> Not enough data yet</li>
     </ul>
-    <p class="help">Tips are based on every test you have done, so they get more accurate the more you practise.</p>
-  </section>
-</div>
+    <p class="help">Hover over or tab to a key to see its mistake %.</p>
 
-<div class="actions">
-  <a class="button go" href="{{ url_for('typing_test', level=result.level) }}">Try again</a>
-  <a class="button" href="{{ url_for('home') }}">Home</a>
+    <div class="actions">
+      <a class="button practice-button" href="{{ url_for('practice') }}">Practise weak keys</a>
+      <a class="button go" href="{{ url_for('typing_test', level=result.level) }}">Try again</a>
+    </div>
+  </section>
 </div>
 {% endif %}
 {% endblock %}

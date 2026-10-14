@@ -1,0 +1,80 @@
+{# Progress and leaderboard (Mockup 7). Owner: Henry. H10-H14
+   "Most improved key" and the "My class" filter are left for Iteration 3. #}
+{% extends "base.html" %}
+{% block title %}Progress{% endblock %}
+
+{% block content %}
+<div id="progress" class="progress-layout" data-leaderboard-url="{{ url_for('leaderboard') }}">
+
+  {# ---------- H10, H11: my WPM over time ---------- #}
+  <section>
+    <h1>My WPM over time</h1>
+    {% if results %}
+    <div class="card graph-box">
+      <canvas id="wpm-graph" data-graph='{{ graph|tojson }}'
+              role="img" aria-label="Line graph of your WPM in each test, oldest to newest: {{ graph.wpm|join(', ') }}"></canvas>
+    </div>
+    {% else %}
+    <div class="card graph-box empty">
+      <p id="no-progress">Do a test to see your progress</p>
+      <a class="button test-button" href="{{ url_for('typing_test') }}">Typing test</a>
+    </div>
+    {% endif %}
+
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-label">Improvement</span>
+        <span class="stat-value" id="improvement">
+          {%- if improvement is none -%}
+            -
+          {%- else -%}
+            {{ "%+g"|format(improvement) }} WPM
+          {%- endif -%}
+        </span>
+      </div>
+    </div>
+    {% if improvement is none %}
+    <p class="help">Do at least 2 tests to see how much you have improved.</p>
+    {% endif %}
+  </section>
+
+  {# ---------- H12, H13, H14: leaderboard ---------- #}
+  <section>
+    <h2>Leaderboard (top 10)</h2>
+    <div class="filters" role="group" aria-label="Leaderboard time">
+      <span>Show:</span>
+      <button type="button" class="button filter" data-period="week" aria-pressed="false">This week</button>
+      <button type="button" class="button filter selected" data-period="all" aria-pressed="true">All time</button>
+    </div>
+    <table class="leaderboard">
+      <thead>
+        <tr><th scope="col">#</th><th scope="col">Username</th><th scope="col">WPM</th></tr>
+      </thead>
+      <tbody id="leaderboard-rows">
+        {% for row in board.rows %}
+        <tr{% if row.you %} class="you"{% endif %}>
+          <td>{{ row.rank }}</td>
+          <td>{{ row.username }}{% if row.you %} (you){% endif %}</td>
+          <td>{{ row.wpm }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p id="leaderboard-empty" class="hint" {% if board.rows %}hidden{% endif %}>Nobody has done a test in this time yet.</p>
+    <p id="your-rank" class="your-rank"
+       {% if not (board.you and not board.you.in_top) and not (board.you is none and board.rows) %}hidden{% endif %}>
+      {%- if board.you -%}
+        You: {{ board.you.place }}, {{ board.you.wpm }} WPM
+      {%- else -%}
+        Do a typing test to get on the board!
+      {%- endif -%}
+    </p>
+    <p class="help">Your best typing test counts. If two people have the same WPM, higher accuracy wins.</p>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/progress.js') }}"></script>
+{% endblock %}

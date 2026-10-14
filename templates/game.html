@@ -1,0 +1,65 @@
+{# Game mode, falling words (Mockup 5). Owner: Lucas. L10-L17
+   The game settings and word lists are handed to game.js through data- attributes. #}
+{% extends "base.html" %}
+{% block title %}Game{% endblock %}
+
+{% block content %}
+<div id="game"
+     data-settings='{{ settings|tojson }}'
+     data-start-url="{{ url_for('start_game') }}"
+     data-result-url="{{ url_for('save_game_result') }}">
+
+  <div class="stats game-stats">
+    <div class="stat">
+      <span class="stat-label">Score</span>
+      <span class="stat-value" id="score">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Level</span>
+      <span class="stat-value" id="level">1</span>
+    </div>
+    <div class="stat">
+      <span class="stat-label">Lives</span>
+      <span class="lives" id="lives" role="img" aria-label="3 of 3 lives left">
+        <span class="life"></span><span class="life"></span><span class="life"></span>
+      </span>
+    </div>
+  </div>
+
+  <div class="play-area" id="play-area">
+    <div class="game-panel" id="start-panel">
+      <h1>Falling words</h1>
+      <p>Type a falling word and press <kbd>Enter</kbd> to destroy it for 10 points.</p>
+      <p>If a word hits the ground you lose a life. Every 100 points the words fall faster!</p>
+      <p>Press <kbd>Esc</kbd> to pause.</p>
+      <button type="button" class="button go" id="start">Start game</button>
+    </div>
+    <div class="game-panel" id="pause-panel" hidden>
+      <h1>Paused</h1>
+      <p>Press <kbd>Esc</kbd> to carry on.</p>
+      <button type="button" class="button go" id="resume">Carry on</button>
+    </div>
+    <div class="game-panel" id="over-panel" hidden>
+      <h1>Game over!</h1>
+      <p class="final">Score <strong id="final-score">0</strong> &middot; Level <strong id="final-level">1</strong></p>
+      <p id="save-status" class="hint" role="status"></p>
+      <div class="actions centred">
+        <button type="button" class="button go" id="play-again">Play again</button>
+        <a class="button practice-button" href="{{ url_for('practice') }}">Practise weak keys</a>
+        <a class="button" href="{{ url_for('progress') }}">My progress</a>
+      </div>
+    </div>
+  </div>
+  <div class="ground" aria-hidden="true">GROUND (lose a life)</div>
+
+  <label for="game-input" class="visually-hidden">Type the falling words here</label>
+  <input id="game-input" class="typing-input" placeholder="Type a word, then press Enter"
+         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" disabled>
+  <p id="game-status" class="visually-hidden" role="status" aria-live="polite"></p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/typing.js') }}"></script>
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+{% endblock %}
