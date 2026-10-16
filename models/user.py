@@ -1,4 +1,4 @@
-"""User accounts.  Owner: Henry (H1, H3, H4, H15, H16).
+"""User accounts.  Owner: Henry (H1, H3, H4, H15, H16, H21).
 
 Only a username is stored for each student (no real names, emails or photos)
 because our users are under 18.
@@ -12,16 +12,21 @@ from werkzeug.security import check_password_hash
 # H1: a username is 3 to 20 letters or numbers, a password is at least 6 characters.
 USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9]{3,20}$")
 MIN_PASSWORD_LENGTH = 6
+MAX_PASSWORD_LENGTH = 100  # H21: stops someone sending a huge password to slow the server down
 
 
 class User:
     """One student account, as loaded from the users table."""
 
-    def __init__(self, user_id, username, password_hash, personal_best=0.0):
+    def __init__(self, user_id, username, password_hash, personal_best=0.0, sound_on=False,
+                 slow_mode=False):
+        """Make a User from the values in one row of the users table."""
         self.user_id = user_id
         self.username = username
         self.password_hash = password_hash
         self.personal_best = personal_best
+        self.sound_on = sound_on        # game settings (F6)
+        self.slow_mode = slow_mode
 
     def check_password(self, password):
         """Return True if the typed password matches the saved hash (H4)."""
@@ -61,6 +66,8 @@ def registration_error(username, password):
         return "Your username must be 3 to 20 letters or numbers, with no spaces."
     if len(password) < MIN_PASSWORD_LENGTH:
         return f"Your password must be {MIN_PASSWORD_LENGTH} or more characters long."
+    if len(password) > MAX_PASSWORD_LENGTH:
+        return f"Your password must be {MAX_PASSWORD_LENGTH} characters or fewer."
     return None
 
 

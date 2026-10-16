@@ -1,7 +1,8 @@
-"""SQLite database access.  Owner: Henry (H1, H2, H7, H8, H10-H18).
+"""SQLite database access.  Owner: Henry (H1, H2, H7, H8, H10-H18, H20, H22, F6).
 
-Every query uses ? placeholders (parameters) instead of joining strings together,
-which stops SQL injection.
+H22: every query uses ? placeholders (parameters) instead of joining strings together,
+which stops SQL injection. tests/test_reliability.py searches this file and app.py for
+string-joined SQL to check it stays that way.
 """
 
 import sqlite3
@@ -15,15 +16,18 @@ from models.user import User
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 MODES = ("test", "game", "drill")  # H18: every activity is saved in the one results table
 
-# The tables from Section 5.1 of the Iteration 1 and Iteration 2 specifications.
-# key_stats is George's table; it is created here so the whole database is set up in one place.
+# The tables from Section 5.1 of the Iteration 1 and Iteration 2 specifications, plus the
+# Iteration 3 settings columns. key_stats is George's table; it is created here
+# so the whole database is set up in one place.
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS users (
     user_id       INTEGER PRIMARY KEY AUTOINCREMENT,
     username      TEXT NOT NULL UNIQUE COLLATE NOCASE,
     password_hash TEXT NOT NULL,
     created       TEXT NOT NULL,
-    personal_best REAL NOT NULL DEFAULT 0
+    personal_best REAL NOT NULL DEFAULT 0,
+    sound_on      INTEGER NOT NULL DEFAULT 0,
+    slow_mode     INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS results (
@@ -60,6 +64,15 @@ CREATE INDEX IF NOT EXISTS results_by_user ON results (user_id, mode);
 CREATE INDEX IF NOT EXISTS results_by_mode ON results (mode, date);
 """
 
+# Iteration 3 columns added to an older users table: (column name, SQL to add it).
+NEW_USER_COLUMNS = (
+    ("sound_on", "ALTER TABLE users ADD COLUMN sound_on INTEGER NOT NULL DEFAULT 0"),
+    ("slow_mode", "ALTER TABLE users ADD COLUMN slow_mode INTEGER NOT NULL DEFAULT 0"),
+)
+
+# The columns a User is made from.
+USER_SELECT = "SELECT user_id, username, password_hash, personal_best, sound_on, slow_mode FROM users "
+
 # Iteration 1 results table -> Iteration 2. SQLite cannot remove the NOT NULL rule from
 # the level column (games and drills have no level), so the table is copied into a new one.
 MIGRATE_RESULTS = """
@@ -90,6 +103,7 @@ class Database:
     """Reads and writes the TypeQuest SQLite database file."""
 
     def __init__(self, db_path):
+        """Remember which database file to use."""
         self.db_path = db_path
 
     @contextmanager
@@ -105,9 +119,10 @@ class Database:
             connection.close()
 
     def create_tables(self):
-        """Make the tables if they do not exist yet, then bring an old database up to date.
+        """H20: make the tables if they do not exist yet, then bring an old database up to date.
 
-        Safe to run every time the app starts.
+        Safe to run every time the app starts, and makes a brand new typequest.db if the
+        file is missing.
         """
         with self.connect() as connection:
             connection.executescript(SCHEMA)
@@ -118,10 +133,11 @@ class Database:
     def columns(self, table):
         """The column names of a table."""
         with self.connect() as connection:
-            return [row["name"] for row in connection.execute(f"PRAGMA table_info({table})")]
+            rows = connection.execute("SELECT name FROM pragma_table_info(?)", (table,))
+            return [row["name"] for row in rows]
 
     def migrate(self):
-        """Add the Iteration 2 columns to an Iteration 1 database, keeping all its data.
+        """Add the Iteration 2 and 3 columns to an older database, keeping all its data.
 
         Returns a list of the changes made (empty if the database was already up to date).
         """
@@ -142,6 +158,12 @@ class Database:
                     " AND mode = 'test'), 0)"
                 )
             changes.append("users: added personal_best, set from each user's best test")
+        user_columns = self.columns("users")
+        for column, sql in NEW_USER_COLUMNS:
+            if column not in user_columns:
+                with self.connect() as connection:
+                    connection.execute(sql)
+                changes.append(f"users: added {column}")
         return changes
 
     # ---------- users ----------
@@ -166,21 +188,15 @@ class Database:
 
     def get_user(self, username):
         """Find a user by username (not case sensitive). Returns a User or None."""
-        return self._find_user("username = ?", username)
+        with self.connect() as connection:
+            row = connection.execute(USER_SELECT + "WHERE username = ?", (username,)).fetchone()
+        return make_user(row)
 
     def get_user_by_id(self, user_id):
         """Find a user by user_id. Returns a User or None."""
-        return self._find_user("user_id = ?", user_id)
-
-    def _find_user(self, where, value):
         with self.connect() as connection:
-            row = connection.execute(
-                "SELECT user_id, username, password_hash, personal_best FROM users WHERE " + where,
-                (value,),
-            ).fetchone()
-        if row is None:
-            return None
-        return User(row["user_id"], row["username"], row["password_hash"], row["personal_best"])
+            row = connection.execute(USER_SELECT + "WHERE user_id = ?", (user_id,)).fetchone()
+        return make_user(row)
 
     def save_personal_best(self, user):
         """Write a User's personal_best back to the users table (H15)."""
@@ -188,6 +204,16 @@ class Database:
             connection.execute(
                 "UPDATE users SET personal_best = ? WHERE user_id = ?",
                 (user.personal_best, user.user_id),
+            )
+
+    # ---------- settings (F6) ----------
+
+    def save_settings(self, user_id, sound_on, slow_mode):
+        """Save a user's game settings: sound effects and slow mode, each True or False."""
+        with self.connect() as connection:
+            connection.execute(
+                "UPDATE users SET sound_on = ?, slow_mode = ? WHERE user_id = ?",
+                (int(sound_on), int(slow_mode), user_id),
             )
 
     # ---------- results ----------
@@ -300,6 +326,14 @@ class Database:
             if row["user_id"] == user_id:
                 return row
         return None
+
+
+def make_user(row):
+    """Turn a row from the users table into a User, or None if there is no row."""
+    if row is None:
+        return None
+    return User(row["user_id"], row["username"], row["password_hash"], row["personal_best"],
+                bool(row["sound_on"]), bool(row["slow_mode"]))
 
 
 def week_ago():

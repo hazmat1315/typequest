@@ -34,7 +34,8 @@ def finish_test(client, correct, total=None, seconds=60.0, key_errors=None):
     """Do what typing.js does at the end of a test."""
     client.get("/test?level=hard")
     return client.post("/result", json={
-        "level": "hard", "correct": correct, "total": total or correct, "seconds": seconds,
+        "level": "hard", "correct": correct, "total": total or correct, "characters": correct,
+        "seconds": seconds,
         "wpm": 0, "accuracy": 0, "key_errors": key_errors or {},
     })
 

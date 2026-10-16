@@ -1,0 +1,27 @@
+{# Settings page. Owner: Lucas. F6 #}
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<h1>Settings</h1>
+
+<div class="settings-layout">
+  <section class="card">
+    <h2>Game</h2>
+    <form method="post" action="{{ url_for('settings') }}">
+      <input type="hidden" name="form" value="game">
+      <label class="checkbox">
+        <input type="checkbox" name="sound_on" id="sound_on" {% if user.sound_on %}checked{% endif %}>
+        Sound effects
+      </label>
+      <p class="help">Beeps when you destroy a word, lose a life or go up a level. Off by default so the classroom stays quiet.</p>
+      <label class="checkbox">
+        <input type="checkbox" name="slow_mode" id="slow_mode" {% if user.slow_mode %}checked{% endif %}>
+        Slow mode for beginners
+      </label>
+      <p class="help">Words fall more slowly, so you have more time to type them.</p>
+      <button type="submit" class="button go">Save game settings</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

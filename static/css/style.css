@@ -30,6 +30,13 @@
   --heat-orange: #e69f00;
   --heat-red: #d55e00;
   --heat-grey: #e4e7eb;
+  /* F7 finger guide: one light colour per finger (the same on both hands). Every key and
+     finger is also labelled, so the colour is never the only clue. */
+  --finger-pinky: #e3b5d6;
+  --finger-ring: #a9d3f0;
+  --finger-middle: #fbe68a;
+  --finger-pointer: #b2e8cc;
+  --finger-thumb: #d9dde2;
 }
 
 * {
@@ -847,6 +854,133 @@ h3 {
 
 .your-rank[hidden] {
   display: none;
+}
+
+/* ---------- Settings (F6) ---------- */
+
+label.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
+
+label.checkbox input {
+  width: 1.4rem;
+  height: 1.4rem;
+  margin: 0;
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.settings-layout .button {
+  margin-top: 1rem;
+}
+
+/* ---------- Error pages (H19) ---------- */
+
+.error-page {
+  text-align: center;
+}
+
+.error-code {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: bold;
+  color: var(--muted);
+}
+
+/* ---------- Finger guide (F7) ---------- */
+
+.finger-guide {
+  margin-top: 2rem;
+}
+
+.finger-guide-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.hands {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+}
+
+.hands .palm {
+  fill: #f6e3d3;
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.hands .finger rect {
+  stroke: var(--ink);
+  stroke-width: 2;
+}
+
+.hands text {
+  font-size: 16px;
+  font-weight: bold;
+  fill: #000;
+}
+
+.hands .finger-pinky rect { fill: var(--finger-pinky); }
+.hands .finger-ring rect { fill: var(--finger-ring); }
+.hands .finger-middle rect { fill: var(--finger-middle); }
+.hands .finger-pointer rect { fill: var(--finger-pointer); }
+.hands .finger-thumb rect { fill: var(--finger-thumb); }
+
+.finger-key.finger-pinky,
+.key.mini.finger-pinky { background: var(--finger-pinky); }
+.finger-key.finger-ring,
+.key.mini.finger-ring { background: var(--finger-ring); }
+.finger-key.finger-middle,
+.key.mini.finger-middle { background: var(--finger-middle); }
+.finger-key.finger-pointer,
+.key.mini.finger-pointer { background: var(--finger-pointer); }
+.finger-key.finger-thumb,
+.key.mini.finger-thumb { background: var(--finger-thumb); }
+
+/* When the student has weak keys, the other fingers fade so the weak ones stand out,
+   and weak keys and fingers get a thick border. */
+.finger-guide.has-weak .finger:not(.weak),
+.finger-guide.has-weak .finger-key:not(.weak) {
+  opacity: 0.55;
+}
+
+.hands .finger.weak rect {
+  stroke-width: 5;
+}
+
+.finger-key.weak {
+  border-width: 4px;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+}
+
+.finger-steps {
+  padding-left: 1.25rem;
+  font-size: 1.1rem;
+}
+
+.finger-steps .none {
+  list-style: none;
+  margin-left: -1.25rem;
+  color: var(--muted);
+}
+
+/* L23: on a 1280 x 720 school laptop the browser's own toolbars take up some of the
+   height, so the play area is shorter and the typing box stays on screen. Word positions
+   are fractions of the play area, so the game plays the same. */
+@media (max-height: 760px) {
+  .play-area { height: 340px; }
 }
 
 /* Small screens: smaller keyboard keys so the heatmap fits. */

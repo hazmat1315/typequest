@@ -1,4 +1,4 @@
-"""Falling words game.  Owner: Lucas (L10-L17).
+"""Falling words game.  Owner: Lucas (L10-L17, L21, F5, F6).
 
 The game itself runs in the browser (static/js/game.js). This class holds the same
 rules on the server, so the server can check a game result is possible before it is
@@ -17,9 +17,11 @@ GAME_WORDS_FILE = Path(__file__).resolve().parent.parent / "data" / "game_words.
 
 START_LIVES = 3
 POINTS_PER_WORD = 10      # L11
-POINTS_PER_LEVEL = 100    # L13: every 100 points the level goes up
+FIRST_LEVEL_WORDS = 3     # F5: 3 words to get from level 1 to level 2 ...
+EXTRA_WORDS_PER_LEVEL = 2  # ... then each level needs 2 more words than the last (3, 5, 7, 9 ...)
 BASE_SPEED = 0.12         # L13: share of the play area a word falls each second at level 1 (about 8 s)
 SPEED_GROWTH = 1.15       # fall speed = base speed x 1.15^(level - 1)
+SLOW_MODE_SPEED = 0.6     # F6: slow mode makes words fall at 60% of the normal speed
 BASE_SPAWN_SECONDS = 2.5  # time between new words = 2.5 / (1 + 0.1 x (level - 1))
 MIN_WORD_LETTERS = 3      # the shortest word in game_words.json
 MAX_GAME_SECONDS = 60 * 60
@@ -34,9 +36,25 @@ def band_for_level(level):
     return BANDS[min((level - 1) // 2, len(BANDS) - 1)]
 
 
+def words_to_next_level(level):
+    """F5: how many words take you from this level to the next: 3, then 5, then 7 ..."""
+    return FIRST_LEVEL_WORDS + EXTRA_WORDS_PER_LEVEL * (level - 1)
+
+
 def level_for_score(score):
-    """L13: level 1 for 0-90 points, level 2 for 100-190 points, and so on."""
-    return 1 + score // POINTS_PER_LEVEL
+    """F5: the level for a score. Level 2 after 3 words, level 3 after 5 more (8 in total),
+    level 4 after 7 more (15 in total), and so on.
+
+    Client feedback in Iteration 2 was that the game should start really easy, so the
+    first level up comes quickly and later ones take longer, instead of every 10 words.
+    """
+    words = score // POINTS_PER_WORD
+    level = 1
+    # Spend the words one level at a time until there aren't enough for the next level.
+    while words >= words_to_next_level(level):
+        words -= words_to_next_level(level)
+        level += 1
+    return level
 
 
 def spawn_seconds(level):
@@ -60,6 +78,7 @@ class Game(TypingSession):
 
     def __init__(self, score=0, level=1, lives=START_LIVES, correct=0, total=0,
                  key_errors=None, seconds=0.0):
+        """Start a game, or rebuild a finished one sent by game.js."""
         super().__init__(None, correct, total, key_errors or {}, seconds)
         self.score = score
         self.level = level
@@ -85,7 +104,7 @@ class Game(TypingSession):
             self.lives -= 1
 
     def level_up(self):
-        """L13: move up a level for every 100 points. Returns True if the level went up."""
+        """F5: move up a level when the score is high enough. Returns True if it went up."""
         new_level = level_for_score(self.score)
         if new_level > self.level:
             self.level = new_level

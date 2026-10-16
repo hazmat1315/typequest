@@ -1,4 +1,4 @@
-"""Turns weak keys into personalised tips and heatmap colours.  Owner: George (G5-G8, G15)."""
+"""Turns weak keys into personalised tips and heatmap colours.  Owner: George (G5-G8, G15, G17)."""
 
 import json
 import random
@@ -8,6 +8,7 @@ from pathlib import Path
 TIPS_FILE = Path(__file__).resolve().parent.parent / "data" / "tips.json"
 GREAT_JOB = "great_job"
 TIP_OF_THE_DAY = "tip_of_the_day"
+HOME_ROW = "home_row"  # G17: the general tip used for a key that has no tips of its own
 
 # G8: the letter rows of a QWERTY keyboard, top to bottom. Space gets its own row.
 KEYBOARD_ROWS = ("qwertyuiop", "asdfghjkl", "zxcvbnm")
@@ -22,11 +23,17 @@ class TipEngine:
     """Looks up tips for each weak key in tips.json and colours the heatmap."""
 
     def __init__(self, tips_file=TIPS_FILE):
+        """Load every tip from tips.json."""
         with open(tips_file, encoding="utf-8") as file:
             # {"e": ["tip 1", "tip 2"], ..., "great_job": "...", "tip_of_the_day": [...]}
             self.tips = json.load(file)
 
-    # ---------- tips (G6, G7, G15) ----------
+    # ---------- tips (G6, G7, G15, G17) ----------
+
+    def tips_for_key(self, key):
+        """The list of tips for a key. G17: if tips.json has no tips for it (for example
+        someone deleted Q by mistake), the general home row tip is used instead of crashing."""
+        return self.tips.get(key) or [self.tips[HOME_ROW]]
 
     def next_tip(self, key, last_tip=None):
         """G15: a random tip for the key that is different from the last one the student saw.
@@ -34,7 +41,7 @@ class TipEngine:
         If the student has never had a tip for this key, the first tip counts as the
         last one, because that is the one the results page showed them.
         """
-        key_tips = self.tips[key]
+        key_tips = self.tips_for_key(key)
         last_tip = last_tip or key_tips[0]
         choices = [tip for tip in key_tips if tip != last_tip]
         return random.choice(choices or key_tips)
@@ -64,8 +71,9 @@ class TipEngine:
         tips = []
         for key, rate in weak_keys:
             text = chosen.get(key)
-            if text not in self.tips[key]:  # never chosen yet, or tips.json has changed
-                text = self.tips[key][0]
+            key_tips = self.tips_for_key(key)
+            if text not in key_tips:  # never chosen yet, or tips.json has changed
+                text = key_tips[0]
             tips.append({"key": key_label(key), "percent": round(rate, 1), "text": text})
         return tips
 

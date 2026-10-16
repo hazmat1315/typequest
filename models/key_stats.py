@@ -19,6 +19,7 @@ class KeyStats:
     """Running totals of presses and mistakes for each key, for one user."""
 
     def __init__(self, presses=None, errors=None):
+        """Start from saved totals, or empty ones for a new user."""
         self.presses = presses or {}
         self.errors = errors or {}
 

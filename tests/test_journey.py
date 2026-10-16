@@ -9,7 +9,7 @@ def finish_test(client, key_errors, correct=40, total=50, seconds=60.0):
     with client.session_transaction() as session:
         level = session["passage"]["level"]
     return client.post("/result", json={
-        "level": level, "correct": correct, "total": total, "seconds": seconds,
+        "level": level, "correct": correct, "total": total, "characters": correct, "seconds": seconds,
         "wpm": 0, "accuracy": 0, "key_errors": key_errors,
     })
 

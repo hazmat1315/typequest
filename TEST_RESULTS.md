@@ -139,3 +139,68 @@ Test plan from Section 7 of the Iteration 2 project specification. Run on 14 Oct
   in the project files, so these rows are still empty.
 - **Section 8:** the Thursday client and Year 7/8 testing session, the rating survey and the
   Iteration 3 changes (Section 8.4).
+
+---
+
+# Iteration 3 Test Results
+
+Test plan from Section 5.1 of the Iteration 3 project specification. Run on 16 October 2026.
+
+- **pytest** = automated tests in `tests/` (`python -m pytest`, 250 tests, all passing). New files:
+  `test_reliability.py` (T38-T49) and `test_feedback.py` (T51-T53)
+- **Node** = `tests/js/game.test.js` (15 tests) and the new `tests/js/typing.test.js` (5 tests) of the
+  browser engines in `game.js` and `typing.js`
+- **Chrome** = automated end-to-end run in headless Google Chrome against the running app with the
+  demo database and real key presses; screenshots in `docs/screenshots/iteration3/`
+
+> As in earlier iterations, each owner should still run their own tests by hand in Chrome and Edge
+> and initial this table before it goes into the planning document. L23 in particular asks for
+> Chrome **and Edge** on a real school laptop; only Chrome was used here.
+
+| ID | Owner | Test | Input | Expected result | Actual | Pass? | How |
+|---|---|---|---|---|---|---|---|
+| T38 | Henry | 404 page | Go to /nothing | TypeQuest 404 page with Home link | "Page not found" page in the TypeQuest layout with a "Go to the home page" button. 405, 413 and 500 also have friendly pages. | ✅ | pytest, Chrome (i3-01) |
+| T39 | Henry | Missing database | Delete typequest.db, start app | Tables created, app runs | All 5 tables made on the first request (also with `flask run`); registering works straight away. Deleting the file while the app runs makes it again. | ✅ | pytest |
+| T40 | Henry | SQL injection attempt | Username: `' OR 1=1 --` | Login refused, no error | "Incorrect username or password", still logged out. Also tried `typer01' --` and `" OR ""="`. | ✅ | pytest |
+| T41 | Henry | Session expiry | Idle over 2 hours | Sent to login with message | Sent to /login with "You were logged out because TypeQuest wasn't used for 2 hours". Still logged in at 1 hour 59 minutes. | ✅ | pytest |
+| T42 | Lucas | Typing after time up | Keep typing at 0:00 | Nothing counted | Typed 5 letters, waited 60.5 s with the page's timer stopped, then typed 10 more: the test ended on the first late key and saved 1.0 WPM (the 10 late letters would have made it 3.0) | ✅ | Node, Chrome |
+| T43 | Lucas | Backspace | Type 'Thw', backspace, 'e' | Text correct; 1 error counted | The wrong letter turned red, Backspace cleared it, the retyped letter turned green; accuracy 75% (3 of 4 presses), WPM counts the 3 right letters | ✅ | Node, pytest, Chrome (i3-08) |
+| T44 | Lucas | Resize during game | Resize window mid-game | Game keeps working | Window made 600 px wide mid-game: the same 2 words stayed on screen, inside the play area, and kept falling | ✅ | Chrome (i3-11) |
+| T45 | Lucas | Tab switch | Switch tab mid-game | Game paused | Paused panel shown and words did not move for 1.2 s. Headless Chrome can't really switch tabs, so the page was sent the same "hidden" event a tab switch sends. **Check by hand with a real tab switch.** | ✅ | Chrome (i3-12) |
+| T46 | George | Key with 0 presses | New key in stats | No crash, key grey | `error_rate` is None, band grey, not a weak key; a test sending Q with 0 presses saves and the results page loads | ✅ | pytest |
+| T47 | George | Missing tip | Remove 'Q' from tips.json | General tip shown | The new `home_row` tip is shown for Q, and tip rotation doesn't crash | ✅ | pytest |
+| T48 | George | Few matching words | Weak keys Q, Z, X | Drill still has 20 words | 20 words. With a word bank of only 2 Q words, the drill uses each twice then 16 general words; with a 3-word bank it still makes 20 | ✅ | pytest |
+| T49 | George | Brand-new user | Open every page | No errors anywhere | Home, Test, Results, Practice, New drill, Progress, Leaderboard, Game and Settings all load with friendly "nothing yet" messages | ✅ | pytest |
+| T51 | Lucas | F5 levels | Destroy 3 words, then more | Level 2 after 3 words, level 3 after 8, level 4 after 15 | Exactly those boundaries in `game.py` and `game.js`; in Chrome the Level box showed "5 words to level 3" straight after the 3rd word | ✅ | pytest, Node, Chrome (i3-10) |
+| T52 | Lucas | F6 settings | Tick sound effects and slow mode | Saved and used by the game | Saved to the account; the game page says "Slow mode is on and sound is on" and words fall at 60% speed. Both are off for new accounts. | ✅ | pytest, Node, Chrome (i3-09) |
+| T53 | George | F7 finger guide | Student with E, R, O weak | The right fingers highlighted with a sentence each | Left middle, left pointer and right ring fingers highlighted; "E: use your left middle finger. It starts on D."; the practice page updates for each new drill | ✅ | pytest, Chrome (i3-05, i3-07) |
+| Regression | All | Re-run all earlier tests | T1 to T37 | All still pass | All pass. Changed on purpose: T27 now levels up at 3 words instead of 100 points (F5), and the test JSON now includes `characters` (L20). One drill test that relied on "more key presses than letters is impossible" now fakes too many right letters instead, because Backspace makes extra key presses possible. | ✅ | pytest |
+
+## Extra checks beyond the test plan
+
+| Requirement | Check | Result |
+|---|---|---|
+| H21 | Server refuses an unknown account type, passwords over 100 characters, unknown leaderboard filters, unknown settings forms and requests over 64 KB | ✅ |
+| H22 | `test_H22_no_string_joined_sql` searches every Python file for SQL built with f-strings, `%`, `.format()` or `+` with a variable | ✅ |
+| L20 | The server checks `characters <= correct <= total` and no more than 20 key presses a second | ✅ |
+| L23 | No sideways scrolling on Home, Results, Practice, Progress, Settings and Game at 1280 x 720, 1920 x 1080 and 400 px wide; the whole game fits at 1280 x 720 | ✅ Chrome |
+| F6 | An Iteration 2 database is upgraded with the new settings columns and every account kept | ✅ |
+| Demo | `make_demo_db.py` makes 8 students; logging in as the demo student opens every page | ✅ |
+| Console | No JavaScript errors or warnings on any page during the Chrome run (only the expected 404 for /nothing) | ✅ Chrome |
+| Quality | Every Python class and function has a docstring; no print statements left in the app | ✅ |
+
+## Bugs found and fixed during Iteration 3
+
+| # | Found by | Problem | Fix | Re-test |
+|---|---|---|---|---|
+| 11 | Code check for H22 | Two SQL statements were built by joining text: `"... WHERE " + where` in `_find_user` and `f"PRAGMA table_info({table})"`. Only fixed values were ever joined, so they couldn't be attacked, but they broke the H22 rule. | Two separate queries with `?`, and `pragma_table_info(?)`. | `test_H22_no_string_joined_sql` passes and catches both old lines when they are put back. ✅ |
+| 12 | Code review for L19 | The timer only checks 10 times a second, so a key pressed in the 0.1 s after 0:00 could still count. | Every key press checks the clock first and ends the test if time is up. | T42 in Chrome. ✅ |
+| 13 | Chrome screenshot at 1280 x 720 | The game's typing box was right at the bottom edge of the screen, so on a school laptop with browser toolbars it would be cut off. | The play area is shorter on screens under 760 px tall. | Screenshot i3-10 shows the whole game. ✅ |
+
+## Still to do by the team (not code)
+
+- Run T44, T45 and L23 by hand in **Chrome and Edge** on a real school laptop (T45 with a real tab switch).
+- User acceptance testing with 3 Year 7/8 students (Section 5.2) and the final client evaluation (Section 6).
+- User guide (Lucas) and updated flowcharts and class diagram: add `FingerGuide`,
+  `User.sound_on` / `slow_mode`, and the new `Database` methods.
+- **Henry's F-change (T50):** still to be chosen and tested. The spec needs one per member.

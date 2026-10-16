@@ -1,4 +1,4 @@
-// Falling words game.  Owner: Lucas (L10, L11, L12, L13, L14, L15, L17).
+// Falling words game.  Owner: Lucas (L10-L15, L17, L21, L22, F5, F6).
 //
 // The file has two parts:
 //   1. FallingWordsGame - the rules of the game (no web page code), so they can be tested
@@ -39,8 +39,10 @@ class FallingWordsGame {
   }
 
   // L13: fall speed = base speed x 1.15^(level - 1)  (share of the play area per second)
+  // F6: slow mode (from the Settings page) makes every word fall at 60% of that speed.
   fallSpeed() {
-    return this.settings.baseSpeed * this.settings.speedGrowth ** (this.level - 1);
+    const speed = this.settings.baseSpeed * this.settings.speedGrowth ** (this.level - 1);
+    return this.settings.slowMode ? speed * this.settings.slowModeSpeed : speed;
   }
 
   // L13: time between new words = 2.5 / (1 + 0.1 x (level - 1))
@@ -159,9 +161,34 @@ class FallingWordsGame {
     return true;
   }
 
-  // L13: up a level for every 100 points. Returns true if the level went up.
+  // F5: words needed to go from this level to the next: 3, then 5, then 7 ...
+  wordsToNextLevel(level) {
+    return this.settings.firstLevelWords + this.settings.extraWordsPerLevel * (level - 1);
+  }
+
+  // F5: the level for a score. Level 2 after 3 words, level 3 after 8, level 4 after 15 ...
+  // The same rule as level_for_score() in models/game.py, so the server agrees.
+  levelForScore(score) {
+    let words = Math.floor(score / this.settings.pointsPerWord);
+    let level = 1;
+    // Spend the words one level at a time until there aren't enough for the next level.
+    while (words >= this.wordsToNextLevel(level)) {
+      words -= this.wordsToNextLevel(level);
+      level += 1;
+    }
+    return level;
+  }
+
+  // F5: how many more words until the next level (shown under the level number).
+  wordsLeftInLevel() {
+    let words = Math.floor(this.score / this.settings.pointsPerWord);
+    for (let level = 1; level < this.level; level += 1) words -= this.wordsToNextLevel(level);
+    return this.wordsToNextLevel(this.level) - words;
+  }
+
+  // Move up a level when the score is high enough. Returns true if the level went up.
   levelUp() {
-    const newLevel = 1 + Math.floor(this.score / this.settings.pointsPerLevel);
+    const newLevel = this.levelForScore(this.score);
     if (newLevel > this.level) {
       this.level = newLevel;
       return true;
@@ -204,6 +231,7 @@ if (typeof document !== "undefined" && document.getElementById("game")) {
   const input = document.getElementById("game-input");
   const scoreDisplay = document.getElementById("score");
   const levelDisplay = document.getElementById("level");
+  const nextLevelDisplay = document.getElementById("next-level");
   const livesDisplay = document.getElementById("lives");
   const announcer = document.getElementById("game-status");
 
@@ -220,6 +248,34 @@ if (typeof document !== "undefined" && document.getElementById("game")) {
   let lastFrame = null;
   const wordElements = new Map(); // word id -> its <div>
 
+  // F6: short beeps made with the Web Audio API, so there are no sound files to load.
+  // Sound is off unless the student turns it on in Settings, so a classroom stays quiet.
+  const SOUNDS = {
+    matched: [[880, 0.08]],
+    wrong: [[220, 0.08]],
+    landed: [[180, 0.25]],
+    levelup: [[523, 0.1], [659, 0.1], [784, 0.15]],
+    gameover: [[392, 0.2], [330, 0.2], [262, 0.35]],
+  };
+  let audio = null;
+
+  // Play a list of [frequency in Hz, seconds] notes one after another.
+  function playSound(name) {
+    if (!settings.soundOn || audio === null) return;
+    let start = audio.currentTime;
+    for (const [frequency, seconds] of SOUNDS[name]) {
+      const note = audio.createOscillator();
+      const volume = audio.createGain();
+      note.frequency.value = frequency;
+      volume.gain.setValueAtTime(0.15, start);
+      volume.gain.exponentialRampToValueAtTime(0.001, start + seconds); // fade out, no click
+      note.connect(volume).connect(audio.destination);
+      note.start(start);
+      note.stop(start + seconds);
+      start += seconds;
+    }
+  }
+
   function showPanel(panel) {
     [startPanel, pausePanel, overPanel].forEach((other) => {
       other.hidden = other !== panel;
@@ -235,6 +291,8 @@ if (typeof document !== "undefined" && document.getElementById("game")) {
       saveStatus.textContent = "Could not start a game. Check you are still logged in.";
       return;
     }
+    // Browsers only allow sound after a click, so the audio is set up here (Start is a click).
+    if (settings.soundOn && audio === null && window.AudioContext) audio = new AudioContext();
     game = new FallingWordsGame(settings);
     wordElements.forEach((element) => element.remove());
     wordElements.clear();
@@ -279,6 +337,9 @@ if (typeof document !== "undefined" && document.getElementById("game")) {
         flash(levelDisplay.parentElement, "level-up");
         announcer.textContent = `Level ${event.level}! Words fall faster now.`;
       }
+      // A level up also counts as a match, so only the level up sound is played.
+      const levelledUp = game.events.some((other) => other.type === "levelup");
+      if (event.type !== "matched" || !levelledUp) playSound(event.type);
     }
     if (game.events.length) drawStats();
     game.events = [];
@@ -327,8 +388,12 @@ if (typeof document !== "undefined" && document.getElementById("game")) {
         }
       }
       // Measured once, so the loop doesn't ask the browser for the size every frame.
-      if (!element.dataset.height) element.dataset.height = element.offsetHeight;
-      const x = word.x * width;
+      if (!element.dataset.height) {
+        element.dataset.height = element.offsetHeight;
+        element.dataset.width = element.offsetWidth;
+      }
+      // L21: keep the whole word inside the play area, even if the window got narrower.
+      const x = Math.max(0, Math.min(word.x * width, width - Number(element.dataset.width)));
       const y = word.y * (height - Number(element.dataset.height));
       // transform moves the word without making the browser redo the page layout,
       // which keeps the game smooth on school laptops.
@@ -339,6 +404,9 @@ if (typeof document !== "undefined" && document.getElementById("game")) {
   function drawStats() {
     scoreDisplay.textContent = game.score;
     levelDisplay.textContent = game.level;
+    const wordsLeft = game.wordsLeftInLevel();
+    nextLevelDisplay.textContent =
+      `${wordsLeft} ${wordsLeft === 1 ? "word" : "words"} to level ${game.level + 1}`;
     livesDisplay.replaceChildren(
       ...Array.from({ length: settings.startLives }, (_, index) => {
         const life = document.createElement("span");
@@ -367,6 +435,7 @@ if (typeof document !== "undefined" && document.getElementById("game")) {
   // L12, L15: stop, show the final score and send the result to the server.
   async function endGame() {
     running = false;
+    playSound("gameover");
     input.disabled = true;
     finalScore.textContent = game.score;
     finalLevel.textContent = game.level;
@@ -396,7 +465,10 @@ if (typeof document !== "undefined" && document.getElementById("game")) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      if (game.typed && !game.submit()) flash(input, "wrong");
+      if (game.typed && !game.submit()) {
+        flash(input, "wrong");
+        playSound("wrong");
+      }
     } else if (event.key === "Backspace") {
       event.preventDefault();
       game.backspace();
@@ -425,9 +497,21 @@ if (typeof document !== "undefined" && document.getElementById("game")) {
     if (paused) resume();
     else pause();
   });
+  // L17, L22: switching to another tab or window pauses the game, so no lives are lost
+  // while the student isn't looking.
   window.addEventListener("blur", pause);
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) pause();
+  });
+
+  // L21: when the window changes size, measure each word again and redraw. Word positions
+  // are kept as fractions of the play area (0 to 1), so no word is lost or jumps away.
+  window.addEventListener("resize", () => {
+    wordElements.forEach((element) => {
+      delete element.dataset.height;
+      delete element.dataset.width;
+    });
+    if (game) drawWords();
   });
 
   document.getElementById("start").addEventListener("click", startGame);

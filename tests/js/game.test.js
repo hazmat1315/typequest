@@ -1,5 +1,5 @@
 // Tests for the browser game engine in static/js/game.js (Lucas): T25-T28 and L11-L13.
-// Run with:  node --test tests/js/      (pytest runs this too, see test_game.py)
+// Run with:  node --test tests/js/game.test.js      (pytest runs this too, see test_game.py)
 
 "use strict";
 
@@ -11,9 +11,12 @@ const SETTINGS = {
   words: { short: ["cat", "dog", "sun"], medium: ["rocket", "planet", "river"], long: ["volcano", "treasure"] },
   startLives: 3,
   pointsPerWord: 10,
-  pointsPerLevel: 100,
+  firstLevelWords: 3,
+  extraWordsPerLevel: 2,
   baseSpeed: 0.12,
   speedGrowth: 1.15,
+  slowMode: false,
+  slowModeSpeed: 0.6,
   baseSpawnSeconds: 2.5,
 };
 
@@ -64,17 +67,40 @@ test("T26 word hits ground: lives 3 to 2", () => {
   assert.equal(game.falling.some((word) => word.text === "cat"), false);
 });
 
-test("T27 level up at exactly 100 points, and words fall faster", () => {
+test("T27, F5 level up at exactly 3 words (30 points), and words fall faster", () => {
   const game = gameWith();
-  game.score = 90;
+  game.score = 20;
   const slowSpeed = game.fallSpeed();
   game.falling = [{ id: 1, text: "cat", x: 0, y: 0 }];
   typeWord(game, "cat");
   game.submit();
-  assert.equal(game.score, 100);
+  assert.equal(game.score, 30);
   assert.equal(game.level, 2);
+  assert.deepEqual(game.events.map((event) => event.type), ["matched", "levelup"]);
   assert.ok(game.fallSpeed() > slowSpeed);
   assert.equal(game.fallSpeed().toFixed(4), (0.12 * 1.15).toFixed(4));
+});
+
+test("F5 each level needs 2 more words than the last: 3, 5, 7, 9", () => {
+  const game = gameWith();
+  // Total words to reach levels 2, 3, 4 and 5: 3, 3+5=8, 8+7=15, 15+9=24
+  const levels = [0, 2, 3, 7, 8, 14, 15, 23, 24].map((words) => game.levelForScore(words * 10));
+  assert.deepEqual(levels, [1, 1, 2, 2, 3, 3, 4, 4, 5]);
+});
+
+test("F5 words left until the next level", () => {
+  const game = gameWith();
+  assert.equal(game.wordsLeftInLevel(), 3);
+  game.score = 50; // 5 words: level 2, and level 3 needs 8
+  game.levelUp();
+  assert.equal(game.level, 2);
+  assert.equal(game.wordsLeftInLevel(), 3);
+});
+
+test("F6 slow mode makes words fall at 60% speed", () => {
+  const normal = new FallingWordsGame(SETTINGS);
+  const slow = new FallingWordsGame({ ...SETTINGS, slowMode: true });
+  assert.equal(slow.fallSpeed().toFixed(4), (normal.fallSpeed() * 0.6).toFixed(4));
 });
 
 test("L13 spawn time follows 2.5 / (1 + 0.1 x (level - 1))", () => {

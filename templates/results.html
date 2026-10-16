@@ -1,6 +1,6 @@
 {# Results and tips screen (Mockup 4).
    Owners: Lucas (results section), Henry (personal best badge, H15) and
-   George (tips section G6, G7, G15 and heatmap G8). #}
+   George (tips section G6, G7, G15, heatmap G8 and finger guide F7). #}
 {% extends "base.html" %}
 {% block title %}Your results{% endblock %}
 
@@ -84,5 +84,8 @@
     </div>
   </section>
 </div>
+
+{# ---------- Finger guide (George) - F7 ---------- #}
+{% with guide = finger_guide %}{% include "_finger_guide.html" %}{% endwith %}
 {% endif %}
 {% endblock %}

@@ -11,7 +11,7 @@
   <form method="post" action="{{ url_for('register') }}">
     <label for="username">Username</label>
     <input id="username" name="username" value="{{ username }}" autocomplete="username"
-           placeholder="speedyfingers12" required autofocus
+           placeholder="speedyfingers12" required autofocus maxlength="20"
            aria-describedby="username-help">
     <p class="help" id="username-help">
       3 to 20 letters or numbers. Make up a nickname. Don't use your real name.
@@ -19,7 +19,7 @@
 
     <label for="password">Password</label>
     <input id="password" name="password" type="password" autocomplete="new-password" required
-           aria-describedby="password-help">
+           maxlength="100" aria-describedby="password-help">
     <p class="help" id="password-help">At least 6 characters.</p>
 
     <button type="submit" class="button go">Create account</button>

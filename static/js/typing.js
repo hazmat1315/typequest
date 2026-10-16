@@ -1,16 +1,21 @@
-// Typing engine.  Owner: Lucas (L3, L4, L5, L6, L7, L8, L9).
+// Typing engine.  Owner: Lucas (L3-L9, L19, L20).
 //
 // The file has three parts:
 //   1. TypingTest - the rules of typing a passage (no web page code), so it can be tested on its own.
 //   2. TypingBox  - connects a TypingTest to a passage box and a typing input: colours each
-//                   letter, blocks Backspace and paste. Reused by George's practice page
-//                   (practice.js, G12) instead of copying this code.
+//                   letter, handles Backspace and blocks paste. Reused by George's practice
+//                   page (practice.js, G12) instead of copying this code.
 //   3. Page code  - the typing test page (test.html): timer, buttons, sending the result.
 //
 // Following the typing test flowchart, every key press moves on to the next letter.
 // A right key turns the letter green; a wrong key turns it red and records a mistake
-// for the key that SHOULD have been pressed. There is no going back with Backspace,
-// so correct key presses always equal correct characters.
+// for the key that SHOULD have been pressed.
+//
+// L20 (Iteration 3): Backspace takes back the last letter so it can be typed again. The
+// mistake still counts for accuracy and the heatmap, so fixing it doesn't hide it. This
+// means there are two different "correct" numbers:
+//   correct    = correct key presses, used for accuracy
+//   characters = letters that are right in the finished text, used for WPM
 
 "use strict";
 
@@ -35,12 +40,16 @@ class TypingTest {
     this.level = level;
     this.position = 0;      // index of the next letter to type
     this.correct = 0;       // correct key presses
-    this.total = 0;         // all key presses
+    this.total = 0;         // all key presses (not counting Backspace)
     this.keyErrors = {};    // {"e": {presses: 20, errors: 5}, ...}
+    this.marks = [];        // true or false for each letter typed so far (right or wrong)
+    this.stopped = false;   // L19: true once time is up, so no more keys are counted
   }
 
-  // Process one key press. Returns true if it was the right letter.
+  // Process one key press. Returns true if it was the right letter, or null if it was
+  // ignored because the test is over.
   type(character) {
+    if (this.stopped || this.isFinished()) return null;
     const expected = this.text[this.position];
     const isCorrect = character === expected;
 
@@ -54,8 +63,28 @@ class TypingTest {
       if (!isCorrect) counts.errors += 1;
     }
 
+    this.marks.push(isCorrect);
     this.position += 1;
     return isCorrect;
+  }
+
+  // L20: take back the last letter. Returns false if there is nothing to take back.
+  // The key press and any mistake have already been counted, so they stay counted.
+  backspace() {
+    if (this.stopped || this.position === 0) return false;
+    this.marks.pop();
+    this.position -= 1;
+    return true;
+  }
+
+  // L19: time is up, so ignore any more keys.
+  stop() {
+    this.stopped = true;
+  }
+
+  // Letters that are right in the text as it is now (mistakes fixed with Backspace count).
+  characters() {
+    return this.marks.filter((mark) => mark).length;
   }
 
   // L6: the passage is finished when every letter has been typed.
@@ -66,7 +95,7 @@ class TypingTest {
   // WPM = (correct characters / 5) / minutes taken
   wpm(seconds) {
     if (seconds <= 0) return 0;
-    return round1(this.correct / CHARACTERS_PER_WORD / (seconds / 60));
+    return round1(this.characters() / CHARACTERS_PER_WORD / (seconds / 60));
   }
 
   // Accuracy = correct key presses / total key presses x 100
@@ -85,6 +114,7 @@ class TypingTest {
       key_errors: this.keyErrors,
       correct: this.correct,
       total: this.total,
+      characters: this.characters(),
       seconds: round1(seconds),
     };
   }
@@ -96,7 +126,8 @@ class TypingTest {
 
 class TypingBox {
   // passageBox: the element that shows the passage; input: the <input> students type in.
-  // handlers (all optional): onFirstKey(), onKey(isCorrect), onFinish()
+  // handlers (all optional): onFirstKey(), onKey(isCorrect), onFinish(), and
+  // allowKey(), which can return false to ignore a key (L19: the timer has run out).
   constructor(passageBox, input, handlers = {}) {
     this.passageBox = passageBox;
     this.input = input;
@@ -144,6 +175,7 @@ class TypingBox {
   // No more typing (the test or drill is over).
   stop() {
     this.stopped = true;
+    if (this.test) this.test.stop();
     this.input.disabled = true;
   }
 
@@ -151,15 +183,31 @@ class TypingBox {
     if (this.stopped) return;
     // Let shortcuts like Ctrl+R through, but Ctrl+V/Cmd+V is blocked by the paste handler.
     if (event.ctrlKey || event.metaKey || event.altKey) return;
-    // No going back: Backspace and Delete do nothing.
-    if (event.key === "Backspace" || event.key === "Delete") {
-      event.preventDefault();
-      return;
-    }
-    // Only single printable characters count (not Shift, arrows, Tab and so on).
-    if (event.key.length !== 1) return;
+    const isBackspace = event.key === "Backspace";
+    // Only Backspace and single printable characters count (not Shift, arrows, Tab and so on).
+    // Delete is blocked too, because there is never anything after the cursor.
+    if (!isBackspace && event.key !== "Delete" && event.key.length !== 1) return;
     event.preventDefault();
-    this.typeCharacter(event.key);
+    if (event.key === "Delete") return;
+    // L19: a key pressed after the timer reached 0:00 is not counted.
+    if (this.handlers.allowKey && !this.handlers.allowKey()) return;
+    if (isBackspace) this.backspace();
+    else this.typeCharacter(event.key);
+  }
+
+  // L20: un-colour the last letter and move the cursor back onto it.
+  backspace() {
+    const test = this.test;
+    if (!test.backspace()) return;
+    if (test.position + 1 < this.letterSpans.length) {
+      this.letterSpans[test.position + 1].classList.remove("current");
+    }
+    const span = this.letterSpans[test.position];
+    span.classList.remove("correct", "incorrect");
+    span.classList.add("current");
+    this.typedText = this.typedText.slice(0, -1);
+    this.input.value = this.typedText;
+    if (this.handlers.onKey) this.handlers.onKey(null);
   }
 
   typeCharacter(character) {
@@ -169,6 +217,7 @@ class TypingBox {
     // L3: colour the letter, then move the cursor on.
     const span = this.letterSpans[test.position];
     const isCorrect = test.type(character);
+    if (isCorrect === null) return;
     span.classList.remove("current");
     span.classList.add(isCorrect ? "correct" : "incorrect");
     if (!test.isFinished()) this.letterSpans[test.position].classList.add("current");
@@ -216,6 +265,15 @@ if (typeof document !== "undefined" && document.getElementById("typing-test")) {
     },
     onKey: updateLiveStats,
     onFinish: endTest,
+    // L19: the timer only checks 10 times a second, so a key pressed in the moment after
+    // 0:00 could sneak in. Checking the clock on every key stops that and ends the test.
+    allowKey() {
+      if (startTime !== null && secondsTaken() >= TEST_SECONDS) {
+        endTest();
+        return false;
+      }
+      return true;
+    },
   });
 
   // Show a new passage and reset everything (used on load, by Restart and by the level buttons).

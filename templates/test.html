@@ -1,4 +1,4 @@
-{# Typing test screen (Mockup 3). Owner: Lucas. L1-L9
+{# Typing test screen (Mockup 3). Owner: Lucas. L1-L9, L19, L20
    The passage and URLs are handed to typing.js through data- attributes. #}
 {% extends "base.html" %}
 {% block title %}Typing test{% endblock %}
@@ -45,7 +45,7 @@
          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
 
   <p id="status" class="hint" role="status" aria-live="polite">
-    Green letters are right. Red underlined letters are mistakes. Keep going, you can't go back!
+    Green letters are right. Red underlined letters are mistakes. Press Backspace to fix one (it still counts as a mistake).
   </p>
 
   <button type="button" id="restart" class="button">Restart</button>

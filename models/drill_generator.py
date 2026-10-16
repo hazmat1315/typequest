@@ -1,4 +1,4 @@
-"""Adaptive practice drills built from a student's weak keys.  Owner: George (G9-G11, G14).
+"""Adaptive practice drills built from a student's weak keys.  Owner: George (G9-G11, G14, G18).
 
 Follows the adaptive drill generator flowchart in the Iteration 2 specification:
 keep the words that contain weak keys, score each one, then pick the drill at
@@ -19,6 +19,7 @@ class DrillGenerator:
     """Builds practice drills from the word bank in words.json."""
 
     def __init__(self, words_file=WORDS_FILE):
+        """Load the word bank from words.json."""
         with open(words_file, encoding="utf-8") as file:
             self.word_bank = json.load(file)
 
@@ -40,7 +41,7 @@ class DrillGenerator:
         """
         weak_letters = [key for key in weak_keys if len(key) == 1]
         if not weak_letters:
-            return random.sample(self.word_bank, n)
+            return self.general_words([], n)
 
         # Keep words with weak keys (list comprehension), then sort best first.
         # Shuffling first means words with the same score come out in a random order.
@@ -50,13 +51,24 @@ class DrillGenerator:
         top = candidates[:TOP_WORDS]
 
         drill = random.sample(top, min(n, len(top)))
-        # A rare weak key (like Q) might have fewer than n words, so each word may be
-        # used a second time, and any space left is filled with other words.
+        # G18: rare weak keys (like Q, Z and X) might have fewer than n words. Each word
+        # may be used a second time (G11 allows twice), then the drill is topped up
+        # with general words so it is always n words long.
         if len(drill) < n:
             drill += random.sample(top, min(n - len(drill), len(top)))
         if len(drill) < n:
-            others = [word for word in self.word_bank if word not in drill]
-            drill += random.sample(others, n - len(drill))
+            drill += self.general_words(drill, n - len(drill))
 
         random.shuffle(drill)
         return drill
+
+    def general_words(self, already_used, count):
+        """G14, G18: `count` random words from the word bank that aren't in the drill yet.
+
+        If the word bank is too small for that, words are allowed to repeat, so this
+        never fails.
+        """
+        others = [word for word in self.word_bank if word not in already_used]
+        if len(others) >= count:
+            return random.sample(others, count)
+        return others + random.choices(self.word_bank, k=count - len(others))

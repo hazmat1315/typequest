@@ -4,12 +4,17 @@ T7, T8 and T11 (timer, green/red letters, paste) happen in the browser, so they
 are checked by hand in Chrome; see TEST_RESULTS.md.
 """
 
+import shutil
+import subprocess
+from pathlib import Path
+
 import pytest
 
 from conftest import register
 from models.passage import LEVELS, Passage
 from models.typing_session import TypingSession
 
+ROOT = Path(__file__).resolve().parent.parent
 EASY = Passage("the cat sat on the mat", "easy")
 
 
@@ -92,7 +97,7 @@ def test_to_result():
 
 
 def good_json(**changes):
-    data = {"level": "easy", "correct": 20, "total": 22, "seconds": 10.5,
+    data = {"level": "easy", "correct": 20, "total": 22, "characters": 20, "seconds": 10.5,
             "wpm": 22.9, "accuracy": 90.9, "key_errors": {"t": {"presses": 3, "errors": 1}}}
     data.update(changes)
     return data
@@ -105,8 +110,11 @@ def test_from_json_accepts_a_good_result():
 
 @pytest.mark.parametrize("changes", [
     {"level": "hard"},              # not the level of the passage
-    {"correct": 23, "total": 23},   # more key presses than letters in the passage
+    {"characters": 23, "correct": 23, "total": 23},  # more right letters than the passage has
     {"correct": 5, "total": 4},     # more correct than total
+    {"characters": 21},             # more right letters than correct key presses
+    {"characters": -1},
+    {"total": 300},                 # 300 key presses in 10.5 seconds is not a person
     {"total": 0, "correct": 0},     # nothing typed
     {"seconds": 0},
     {"seconds": 500},
@@ -144,7 +152,8 @@ def test_L7_post_result_saves_and_server_recalculates(client, db):
     client.get("/test?level=easy")
     passage = current_passage(client)
     # The page claims 999 WPM, but the server works it out from the counts.
-    response = client.post("/result", json=good_json(wpm=999, accuracy=100, correct=50, total=50, seconds=60))
+    response = client.post("/result", json=good_json(wpm=999, accuracy=100, correct=50, total=50,
+                                                     characters=50, seconds=60))
     assert response.status_code == 200
     assert response.get_json() == {"redirect": "/results"}
     latest = db.get_latest_result(db.get_user("typer01").user_id)
@@ -197,3 +206,11 @@ def test_test_page_remembers_last_level(client):
     client.get("/test?level=hard")
     client.get("/test")
     assert current_passage(client)["level"] == "hard"
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="Node.js is not installed")
+def test_typing_js_rules():
+    """T42, T43 (time up and Backspace) against the browser typing engine itself."""
+    result = subprocess.run(["node", "--test", "tests/js/typing.test.js"], cwd=ROOT,
+                            capture_output=True, text=True)
+    assert result.returncode == 0, result.stdout + result.stderr

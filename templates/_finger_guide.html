@@ -1,0 +1,71 @@
+{# Finger guide. Owner: George. F7
+   Included by results.html and practice.html. Needs `guide` from FingerGuide.guide().
+   Every key and finger is coloured by which finger presses it AND labelled, so colour is
+   never the only clue. The fingers for the student's weak keys are highlighted. #}
+{# Where each finger is drawn in the picture: x, y, width, height. The right hand is the
+   left hand flipped, so the two hands match. #}
+{% set shapes = {
+    "left_pinky": (22, 50, 30, 62), "left_ring": (58, 24, 30, 88),
+    "left_middle": (94, 12, 30, 100), "left_pointer": (130, 26, 30, 86),
+    "left_thumb": (166, 112, 54, 28),
+    "right_thumb": (220, 112, 54, 28), "right_pointer": (280, 26, 30, 86),
+    "right_middle": (316, 12, 30, 100), "right_ring": (352, 24, 30, 88),
+    "right_pinky": (388, 50, 30, 62),
+} %}
+<section class="finger-guide{% if guide.steps %} has-weak{% endif %}" id="finger-guide"
+         aria-labelledby="finger-guide-title">
+  <h2 id="finger-guide-title">Which finger?</h2>
+  <p class="help">Each colour is one finger. Keep your fingers on their home keys and reach from there.
+    {%- if guide.steps %} The fingers for your weak keys have a thick border.{% endif %}</p>
+
+  <div class="finger-guide-body">
+    <svg class="hands" viewBox="0 0 440 190" role="img" aria-labelledby="hands-title">
+      <title id="hands-title">Two hands on the keyboard. Each finger shows the home key it rests on.</title>
+      <rect class="palm" x="20" y="96" width="160" height="84" rx="26"/>
+      <rect class="palm" x="260" y="96" width="160" height="84" rx="26"/>
+      {% for finger in guide.hands %}
+        {% set x, y, width, height = shapes[finger.id] %}
+        <g class="finger finger-{{ finger.id.split('_')[1] }}{% if finger.weak %} weak{% endif %}"
+           data-finger="{{ finger.id }}">
+          <title>{{ finger.name|capitalize }}: starts on {{ finger.home }}</title>
+          <rect x="{{ x }}" y="{{ y }}" width="{{ width }}" height="{{ height }}" rx="15"/>
+          {% if finger.home != "Space" %}
+          <text x="{{ x + width / 2 }}" y="{{ y + 24 }}" text-anchor="middle">{{ finger.home }}</text>
+          {% endif %}
+        </g>
+      {% endfor %}
+    </svg>
+
+    <div class="keyboard finger-keyboard" role="list" aria-label="Which finger presses each key">
+      {% for row in guide.keyboard %}
+      <div class="keyboard-row row-{{ loop.index }}" role="none">
+        {% for key in row %}
+          {% set finger_name = guide.hands|selectattr("id", "equalto", key.finger)|map(attribute="name")|first %}
+          {% set detail = "use one thumb" if key.name == "space" else "use your " ~ finger_name %}
+        <span class="key finger-key finger-{{ key.finger.split('_')[1] }}{% if key.name == 'space' %} space{% endif %}{% if key.weak %} weak{% endif %}"
+              role="listitem" tabindex="0" data-key="{{ key.name }}"
+              title="{{ key.label }}: {{ detail }}" aria-label="{{ key.label }}: {{ detail }}">
+          {{- "space" if key.name == "space" else key.label -}}
+        </span>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <ul class="legend finger-legend">
+    <li><span class="key mini finger-pinky"></span> Pinky</li>
+    <li><span class="key mini finger-ring"></span> Ring finger</li>
+    <li><span class="key mini finger-middle"></span> Middle finger</li>
+    <li><span class="key mini finger-pointer"></span> Pointer finger</li>
+    <li><span class="key mini finger-thumb"></span> Thumb</li>
+  </ul>
+
+  <ul class="finger-steps" id="finger-steps">
+    {% for step in guide.steps %}
+    <li>{{ step }}</li>
+    {% else %}
+    <li class="none">You don't have any weak keys right now. Hover over or tab to a key to see which finger presses it.</li>
+    {% endfor %}
+  </ul>
+</section>

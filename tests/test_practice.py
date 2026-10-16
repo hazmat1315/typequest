@@ -24,7 +24,8 @@ def stats_from(**counts):
 def finish_test(client, key_errors):
     client.get("/test?level=hard")
     return client.post("/result", json={
-        "level": "hard", "correct": 40, "total": 50, "seconds": 60.0, "key_errors": key_errors,
+        "level": "hard", "correct": 40, "total": 50, "characters": 40, "seconds": 60.0,
+        "key_errors": key_errors,
     })
 
 
@@ -189,7 +190,7 @@ def test_G12_new_drill_button(client):
 
 
 def drill_json(text, correct, total, key_errors, seconds=30.0):
-    return {"level": None, "correct": correct, "total": total, "seconds": seconds,
+    return {"level": None, "correct": correct, "total": total, "characters": correct, "seconds": seconds,
             "wpm": 0, "accuracy": 0, "key_errors": key_errors}
 
 
@@ -210,7 +211,9 @@ def test_G13_drill_cannot_be_saved_twice_or_faked(client):
     register(client)
     client.get("/practice")
     text = current_drill(client)["text"]
-    assert client.post("/practice/result", json=drill_json(text, 10, len(text) + 1, {})).status_code == 400
+    # More right letters than the drill has: refused.
+    assert client.post("/practice/result",
+                       json=drill_json(text, len(text) + 1, len(text) + 1, {})).status_code == 400
     assert client.post("/practice/result", json=drill_json(text, 10, 12, {})).status_code == 200
     assert client.post("/practice/result", json=drill_json(text, 10, 12, {})).status_code == 400
 

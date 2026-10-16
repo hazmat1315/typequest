@@ -1,4 +1,4 @@
-{# Game mode, falling words (Mockup 5). Owner: Lucas. L10-L17
+{# Game mode, falling words (Mockup 5). Owner: Lucas. L10-L17, L21, L22, F5, F6
    The game settings and word lists are handed to game.js through data- attributes. #}
 {% extends "base.html" %}
 {% block title %}Game{% endblock %}
@@ -17,6 +17,7 @@
     <div class="stat">
       <span class="stat-label">Level</span>
       <span class="stat-value" id="level">1</span>
+      <span class="stat-label" id="next-level">{{ settings.firstLevelWords }} words to level 2</span>
     </div>
     <div class="stat">
       <span class="stat-label">Lives</span>
@@ -30,8 +31,14 @@
     <div class="game-panel" id="start-panel">
       <h1>Falling words</h1>
       <p>Type a falling word and press <kbd>Enter</kbd> to destroy it for 10 points.</p>
-      <p>If a word hits the ground you lose a life. Every 100 points the words fall faster!</p>
+      <p>If a word hits the ground you lose a life.</p>
+      <p>Destroy {{ settings.firstLevelWords }} words to reach level 2. Each level after that needs
+         {{ settings.extraWordsPerLevel }} more words than the last, and the words fall faster.</p>
       <p>Press <kbd>Esc</kbd> to pause.</p>
+      <p class="help" id="game-settings">
+        Slow mode is {{ "on" if settings.slowMode else "off" }} and sound is {{ "on" if settings.soundOn else "off" }}.
+        <a href="{{ url_for('settings') }}">Change in Settings</a>
+      </p>
       <button type="button" class="button go" id="start">Start game</button>
     </div>
     <div class="game-panel" id="pause-panel" hidden>

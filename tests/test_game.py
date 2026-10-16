@@ -1,4 +1,5 @@
-"""Tests for game mode and UI (Lucas): T25-T30 from the Iteration 2 test plan, plus L10-L18.
+"""Tests for game mode and UI (Lucas): T25-T30 from the Iteration 2 test plan, plus L10-L18
+and the Iteration 3 level change (F5).
 
 The game runs in the browser, so the rules are tested twice: here against the
 Game class the server uses, and in tests/js/game.test.js against game.js (run by
@@ -15,14 +16,15 @@ from pathlib import Path
 import pytest
 
 from conftest import page_text, register
-from models.game import BANDS, Game, band_for_level, fall_speed, load_game_words, spawn_seconds
+from models.game import (BANDS, Game, band_for_level, fall_speed, level_for_score, load_game_words,
+                         spawn_seconds, words_to_next_level)
 from models.typing_session import TypingSession
 
 ROOT = Path(__file__).resolve().parent.parent
 
 
 def game_json(**changes):
-    data = {"score": 120, "level_reached": 2, "correct": 60, "total": 66, "seconds": 75.0,
+    data = {"score": 120, "level_reached": 3, "correct": 60, "total": 66, "seconds": 75.0,
             "key_errors": {"e": {"presses": 12, "errors": 2}}}
     data.update(changes)
     return data
@@ -61,20 +63,51 @@ def test_T26_word_hits_ground():
     assert game.falling == []
 
 
-def test_T27_level_up_at_exactly_100():
-    game = Game(score=90)
+def test_T27_level_up_at_exactly_3_words():
+    # F5 changed the boundary: level 2 now comes after 3 words (30 points), not 100 points.
+    game = Game(score=20)
     game.falling = ["cat"]
     slow = game.fall_speed()
     game.check_word("cat")
-    assert (game.score, game.level) == (100, 2)
+    assert (game.score, game.level) == (30, 2)
     assert game.fall_speed() > slow
 
 
-def test_T27_no_level_up_at_90():
-    game = Game(score=80)
+def test_T27_no_level_up_at_2_words():
+    game = Game(score=10)
     game.falling = ["cat"]
     game.check_word("cat")
     assert game.level == 1
+
+
+# ---------- F5: each level needs more words than the last ----------
+
+
+def test_T51_F5_words_needed_go_up_by_2_each_level():
+    assert [words_to_next_level(level) for level in (1, 2, 3, 4, 5)] == [3, 5, 7, 9, 11]
+
+
+@pytest.mark.parametrize("words, level", [
+    (0, 1), (2, 1),      # level 2 needs 3 words
+    (3, 2), (7, 2),      # level 3 needs 3 + 5 = 8 words
+    (8, 3), (14, 3),     # level 4 needs 8 + 7 = 15 words
+    (15, 4), (23, 4),    # level 5 needs 15 + 9 = 24 words
+    (24, 5), (99, 10),
+])
+def test_T51_F5_level_boundaries(words, level):
+    assert level_for_score(words * 10) == level
+
+
+def test_T51_F5_game_climbs_one_level_at_a_time():
+    game = Game()
+    levels = []
+    for number in range(15):
+        word = f"word{number}"
+        game.falling = [word]
+        game.check_word(word)
+        levels.append(game.level)
+    # Level 2 after the 3rd word, level 3 after the 8th, level 4 after the 15th.
+    assert levels == [1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4]
 
 
 def test_T28_game_over_after_3_lives():
@@ -91,17 +124,17 @@ def test_T28_game_result_sent_and_saved(client, db):
     play_game(client)
     response = client.post("/game/result", json=game_json())
     assert response.status_code == 200
-    assert response.get_json() == {"saved": True, "score": 120, "level": 2}
+    assert response.get_json() == {"saved": True, "score": 120, "level": 3}
     with db.connect() as connection:
         row = connection.execute("SELECT mode, score, level_reached, wpm, accuracy FROM results").fetchone()
-    assert tuple(row) == ("game", 120, 2, 9.6, 90.9)  # 60 chars / 5 / 1.25 min
+    assert tuple(row) == ("game", 120, 3, 9.6, 90.9)  # 60 chars / 5 / 1.25 min
 
 
 @pytest.mark.parametrize("score", [99999, 99990])
 def test_T30_impossible_score_rejected(client, db, score):
     register(client)
     play_game(client)
-    response = client.post("/game/result", json=game_json(score=score, level_reached=1 + score // 100,
+    response = client.post("/game/result", json=game_json(score=score, level_reached=level_for_score(score),
                                                            correct=40000, total=40000))
     assert response.status_code == 400
     assert "could not be saved" in response.get_json()["error"]
@@ -159,14 +192,14 @@ def test_L16_game_inherits_typing_session():
 
 def test_L16_from_json_accepts_a_good_game():
     game = Game.from_json(game_json())
-    assert (game.score, game.level, game.seconds) == (120, 2, 75.0)
+    assert (game.score, game.level, game.seconds) == (120, 3, 75.0)
     assert game.to_result()["mode"] == "game"
 
 
 @pytest.mark.parametrize("changes", [
     {"score": 125},                         # not a multiple of 10
     {"score": -10, "level_reached": 1},
-    {"level_reached": 3},                   # 120 points is level 2
+    {"level_reached": 2},                   # 120 points (12 words) is level 3
     {"correct": 70, "total": 60},
     {"correct": 20},                        # 12 words need at least 36 letters
     {"seconds": 0},
@@ -262,7 +295,7 @@ def test_new_pages_need_login(client, url):
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="Node.js is not installed")
 def test_game_js_rules():
-    """T25-T28 against the browser game engine itself."""
+    """T25-T28 and F5 against the browser game engine itself."""
     result = subprocess.run(["node", "--test", "tests/js/game.test.js"], cwd=ROOT,
                             capture_output=True, text=True)
     assert result.returncode == 0, result.stdout + result.stderr

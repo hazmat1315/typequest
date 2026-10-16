@@ -14,6 +14,7 @@ class Passage:
     _bank = None  # every passage from passages.json, loaded the first time it is needed
 
     def __init__(self, text, level):
+        """Make a passage from its text and level."""
         self.text = text
         self.level = level
 

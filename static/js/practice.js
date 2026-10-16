@@ -1,4 +1,4 @@
-// Adaptive practice drill page.  Owner: George (G11, G12, G13, G14).
+// Adaptive practice drill page.  Owner: George (G11, G12, G13, G14, F7).
 //
 // Typing input and letter colouring come from Lucas's TypingBox in typing.js (loaded
 // first on the page), so the drill works exactly like the typing test. There is no
@@ -48,6 +48,35 @@ if (document.getElementById("practice")) {
     finishButton.disabled = false;
     resultsPanel.hidden = true;
     drawWeakKeys(drill.weak_keys);
+    drawFingerGuide(drill.finger_guide);
+  }
+
+  // F7: highlight the fingers and keys for this drill's focus keys, and list what to do.
+  function drawFingerGuide(guide) {
+    const section = document.getElementById("finger-guide");
+    const weakKeys = new Set(guide.keyboard.flat().filter((key) => key.weak).map((key) => key.name));
+    const weakFingers = new Set(guide.hands.filter((finger) => finger.weak).map((finger) => finger.id));
+    section.querySelectorAll("[data-key]").forEach((element) =>
+      element.classList.toggle("weak", weakKeys.has(element.dataset.key)),
+    );
+    section.querySelectorAll("[data-finger]").forEach((element) =>
+      element.classList.toggle("weak", weakFingers.has(element.dataset.finger)),
+    );
+    section.classList.toggle("has-weak", guide.steps.length > 0);
+    const steps = document.getElementById("finger-steps");
+    steps.replaceChildren(
+      ...guide.steps.map((step) => {
+        const item = document.createElement("li");
+        item.textContent = step;
+        return item;
+      }),
+    );
+    if (guide.steps.length === 0) {
+      const item = document.createElement("li");
+      item.className = "none";
+      item.textContent = "You don't have any weak keys right now. Hover over or tab to a key to see which finger presses it.";
+      steps.appendChild(item);
+    }
   }
 
   // The coloured key boxes at the top, e.g. [E] [R] [O].

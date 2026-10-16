@@ -1,4 +1,4 @@
-{# Adaptive practice drill (Mockup 6). Owner: George. G10-G14
+{# Adaptive practice drill (Mockup 6). Owner: George. G10-G14, F7
    The typing box is Lucas's TypingBox from typing.js (reused, not copied). #}
 {% extends "base.html" %}
 {% block title %}Practice{% endblock %}
@@ -37,7 +37,7 @@
     <button type="button" id="finish" class="button go">Finish</button>
   </div>
   <p id="drill-status" class="hint" role="status" aria-live="polite">
-    No timer: take your time and get the letters right. You can't go back!
+    No timer: take your time and get the letters right. Backspace fixes a mistake.
   </p>
 
   <section id="drill-results" class="card drill-results" hidden>
@@ -57,6 +57,9 @@
       <ul id="before-after" class="before-after"></ul>
     </div>
   </section>
+
+  {# F7: which finger to use for each focus key. practice.js updates it for each new drill. #}
+  {% with guide = drill.finger_guide %}{% include "_finger_guide.html" %}{% endwith %}
 </div>
 {% endblock %}
 

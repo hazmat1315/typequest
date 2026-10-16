@@ -1,2 +1,5 @@
-Flask>=3.0
-pytest>=8.0
+# Install with:  pip install -r requirements.txt
+Flask==3.1.3       # the web framework TypeQuest is built on
+Werkzeug==3.1.9    # comes with Flask; also used for password hashing
+Jinja2==3.1.6      # comes with Flask; the HTML templates
+pytest==9.1.1      # runs the automated tests in tests/

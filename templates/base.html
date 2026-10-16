@@ -19,6 +19,7 @@
       ("practice", "Practice"),
       ("progress", "Progress"),
   ] %}
+  {% set nav = nav + [("settings", "Settings")] %}
   <header class="topbar">
     <a class="logo" href="{{ url_for('home') }}">TypeQuest</a>
     <nav aria-label="Main">
